@@ -1,0 +1,35 @@
+/* Shift Hours — token tipografia (base provvisoria, Fase 1)
+ *
+ * Stack di sistema: su iPhone è San Francisco, già installato. Nessun font da
+ * scaricare = nessun rischio offline, nessun peso in più.
+ *
+ * La scala è volutamente ampia: i numeri (ore, paga) sono il contenuto
+ * principale dell'app e devono dominare, il resto sta indietro.
+ */
+
+:root {
+  --sh-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+             Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --sh-size-2xs: 0.6875rem;  /* 11px — solo occhielli maiuscoletti */
+  --sh-size-xs: 0.8125rem;   /* 13px */
+  --sh-size-sm: 0.9375rem;   /* 15px */
+  --sh-size-md: 1.0625rem;   /* 17px — corpo, misura di sistema iOS */
+  --sh-size-lg: 1.25rem;     /* 20px */
+  --sh-size-xl: 1.75rem;     /* 28px — titoli di schermata */
+  --sh-size-2xl: 2.125rem;   /* 34px — orari nello slider aperto */
+  --sh-size-3xl: 2.75rem;    /* 44px — totale della settimana */
+
+  --sh-weight-regular: 400;
+  --sh-weight-medium: 500;
+  --sh-weight-semibold: 600;
+  --sh-weight-bold: 700;
+
+  --sh-leading-tight: 1.05;
+  --sh-leading-snug: 1.25;
+  --sh-leading-normal: 1.45;
+
+  --sh-tracking-tighter: -0.03em; /* numeri grandi */
+  --sh-tracking-tight: -0.015em;
+  --sh-tracking-wide: 0.08em;     /* occhielli maiuscoletti */
+}
