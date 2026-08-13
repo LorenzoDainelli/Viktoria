@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shift Hours — riferimento visivo (base provvisoria)</title>
+
+<link rel="stylesheet" href="tokens/colors.css">
+<link rel="stylesheet" href="tokens/typography.css">
+<link rel="stylesheet" href="tokens/space.css">
+<link rel="stylesheet" href="components.css">
+
+<style>
+  /* Stili della sola pagina di riferimento: non fanno parte dell'app.
+     Usano comunque i token, così la pagina resta coerente. */
+  .doc {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: var(--sh-space-6) var(--sh-space-4) var(--sh-space-8);
+  }
+  .doc h1 { font-size: var(--sh-size-2xl); letter-spacing: var(--sh-tracking-tight); margin: 0 0 var(--sh-space-2); }
+  .doc h2 { font-size: var(--sh-size-xl); letter-spacing: var(--sh-tracking-tight); margin: var(--sh-space-8) 0 var(--sh-space-2); }
+  .doc h3 { font-size: var(--sh-size-md); margin: var(--sh-space-6) 0 var(--sh-space-3); color: var(--sh-text-muted); }
+  .doc p  { margin: 0 0 var(--sh-space-3); max-width: 62ch; color: var(--sh-text-muted); }
+  .doc code { font-family: var(--sh-font-numeric); font-size: 0.9em; background: var(--sh-surface); padding: 0 var(--sh-space-1); border-radius: var(--sh-radius-sm); }
+  .doc hr { border: 0; border-top: 1px solid var(--sh-border); margin: var(--sh-space-6) 0 0; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--sh-space-3); }
+  .swatch { border: 1px solid var(--sh-border); border-radius: var(--sh-radius-md); overflow: hidden; }
+  .swatch__chip { height: 64px; }
+  .swatch__meta { padding: var(--sh-space-2) var(--sh-space-3); font-size: var(--sh-size-xs); }
+  .swatch__name { font-weight: var(--sh-weight-semibold); }
+  .swatch__val { color: var(--sh-text-muted); font-family: var(--sh-font-numeric); }
+
+  .specimens { display: grid; gap: var(--sh-space-4); grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .specimen { border: 1px solid var(--sh-border); border-radius: var(--sh-radius-lg); padding: var(--sh-space-4); background: var(--sh-bg); }
+  .specimen__label { font-size: var(--sh-size-xs); text-transform: uppercase; letter-spacing: var(--sh-tracking-wide); color: var(--sh-text-muted); font-weight: var(--sh-weight-semibold); margin-bottom: var(--sh-space-3); }
+
+  .screens { display: flex; flex-wrap: wrap; gap: var(--sh-space-6); }
+  .screen { flex: none; }
+  .screen__label { font-size: var(--sh-size-sm); font-weight: var(--sh-weight-semibold); margin-bottom: var(--sh-space-2); }
+  .screen__note { font-size: var(--sh-size-xs); color: var(--sh-text-muted); max-width: 393px; margin-top: var(--sh-space-2); }
+
+  /* Telaio iPhone 15: 393 × 852 px CSS */
+  .frame {
+    width: 393px; height: 852px;
+    border: 10px solid #1c1c1e;
+    border-radius: 46px;
+    overflow: hidden;
+    background: var(--sh-bg);
+    box-shadow: var(--sh-shadow-md);
+  }
+  .frame .sh-app,
+  .frame .sh-panel { min-height: 0; height: 100%; }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <h1>Shift Hours — riferimento visivo</h1>
+  <p>
+    Base grafica <strong>provvisoria</strong> della Fase 1: serve solo a provare
+    le funzioni. Verrà sostituita da Claude Design cambiando i file di
+    <code>design_handoff/</code>, senza toccare HTML e JS.
+    Tutti gli orari e i numeri di questa pagina sono <strong>inventati</strong>:
+    nessun dato reale sta nel repo.
+  </p>
+
+  <h2>Colore</h2>
+  <p>
+    Bianco, nero, un blu. Il rosso esiste solo per le azioni che cancellano.
+    I contrasti indicati sono su sfondo bianco, salvo dove specificato.
+  </p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-primary)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-primary</div><div class="swatch__val">#1B47C9 · 7.6:1 con bianco</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-primary-pressed)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-primary-pressed</div><div class="swatch__val">#14349B · premuto</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-primary-tint)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-primary-tint</div><div class="swatch__val">#E8EDFC · sfondi tenui</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-text)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-text</div><div class="swatch__val">#000000 · 21:1</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-text-muted)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-text-muted</div><div class="swatch__val">#5A616E · 7.0:1</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-surface); border-bottom: 1px solid var(--sh-border)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-surface</div><div class="swatch__val">#F4F6FA</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-danger)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-danger</div><div class="swatch__val">#C22A1F · 5.6:1</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-disabled-bg); border-bottom: 1px solid var(--sh-border)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-disabled-bg</div><div class="swatch__val">#E6E9EF · pulsanti spenti</div></div>
+    </div>
+  </div>
+
+  <h2>Tipografia</h2>
+  <p>
+    Carattere di sistema (su iPhone è San Francisco): nulla da scaricare, quindi
+    nessun rischio offline. Gli orari usano cifre a larghezza fissa, così non
+    "ballano" mentre trascina lo slider.
+  </p>
+  <div class="specimens">
+    <div class="specimen">
+      <div class="specimen__label">Scala</div>
+      <div style="font-size: var(--sh-size-2xl); font-weight: var(--sh-weight-semibold); font-family: var(--sh-font-numeric)">9:00 / 17:25</div>
+      <div style="font-size: var(--sh-size-xl); font-weight: var(--sh-weight-bold)">31 hours and 40 minutes</div>
+      <div style="font-size: var(--sh-size-lg); font-weight: var(--sh-weight-semibold)">Thursday</div>
+      <div style="font-size: var(--sh-size-md)">Testo normale, 17px</div>
+      <div style="font-size: var(--sh-size-sm); color: var(--sh-text-muted)">Testo secondario, 15px</div>
+      <div style="font-size: var(--sh-size-xs); color: var(--sh-text-muted); text-transform: uppercase; letter-spacing: var(--sh-tracking-wide)">Etichetta, 13px</div>
+    </div>
+  </div>
+
+  <h2>Componenti</h2>
+  <div class="specimens">
+
+    <div class="specimen">
+      <div class="specimen__label">Giorno non lavorato</div>
+      <div class="sh-day">
+        <button class="sh-day__head" type="button">
+          <span class="sh-day__name">Tuesday</span>
+          <span class="sh-day__empty">Not worked</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Giorno lavorato, con ✕</div>
+      <div class="sh-day sh-day--filled">
+        <button class="sh-day__head" type="button">
+          <span class="sh-day__name">Monday</span>
+          <span class="sh-day__value">
+            <span class="sh-day__times">8:00 / 16:30</span>
+            <span class="sh-day__hours">8.30 hrs</span>
+          </span>
+        </button>
+        <span class="sh-day__clear" role="button" aria-label="Clear Monday">✕</span>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Selettore tipo di settimana</div>
+      <button class="sh-chip" type="button">Week ▾</button>
+      <div style="height: var(--sh-space-3)"></div>
+      <button class="sh-chip" type="button">Weekend ▾</button>
+      <div style="height: var(--sh-space-3)"></div>
+      <button class="sh-chip" type="button">☕ Mornings ▾</button>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Pulsanti</div>
+      <button class="sh-btn" type="button">Copy summary</button>
+      <div style="height: var(--sh-space-3)"></div>
+      <button class="sh-btn" type="button" disabled>Copy summary</button>
+      <div style="height: var(--sh-space-3)"></div>
+      <button class="sh-btn sh-btn--secondary" type="button">Download backup</button>
+      <div style="height: var(--sh-space-3)"></div>
+      <button class="sh-btn sh-btn--danger" type="button">Clear this week</button>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Notifica non bloccante</div>
+      <div class="sh-toast">Week ending 9 August saved to history</div>
+      <div style="height: var(--sh-space-3)"></div>
+      <div class="sh-toast">Copied</div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Riga dello storico</div>
+      <button class="sh-histrow" type="button">
+        <span class="sh-histrow__main">
+          <span class="sh-histrow__week">Week ending 9 August 2026</span><br>
+          <span class="sh-histrow__meta">38 hours and 15 minutes · 5 days</span>
+        </span>
+        <span class="sh-histrow__chevron">›</span>
+      </button>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Regolazione fine, 5 minuti per tocco</div>
+      <div class="sh-nudges">
+        <div class="sh-nudge">
+          <button class="sh-nudge__btn" type="button" aria-label="Start earlier">−</button>
+          <span class="sh-nudge__label">Start</span>
+          <button class="sh-nudge__btn" type="button" aria-label="Start later">+</button>
+        </div>
+        <div class="sh-nudge">
+          <button class="sh-nudge__btn" type="button" aria-label="End earlier">−</button>
+          <span class="sh-nudge__label">End</span>
+          <button class="sh-nudge__btn" type="button" aria-label="End later">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Scelta dei giorni (settimana personalizzata)</div>
+      <div class="sh-daypicker">
+        <button class="sh-daypicker__day" type="button" aria-pressed="true">M</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="false">T</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="true">W</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="false">T</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="true">F</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="false">S</button>
+        <button class="sh-daypicker__day" type="button" aria-pressed="false">S</button>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Le schermate intere</h2>
+  <p>
+    Larghezza reale di un iPhone 15 (393 × 852 px). Tre schermate in tutto:
+    settimana, storico, impostazioni. Barra in alto e barra in basso restano
+    ferme, scorre solo l'elenco dei giorni.
+  </p>
+
+  <div class="screens">
+
+    <!-- ── Schermata 1: la settimana ── -->
+    <div class="screen">
+      <div class="screen__label">1 · Settimana (tipo “Week”)</div>
+      <div class="frame">
+        <div class="sh-app">
+
+          <header class="sh-topbar">
+            <div class="sh-topbar__main">
+              <div class="sh-topbar__week">Week ending 16 August</div>
+              <button class="sh-chip" type="button">Week ▾</button>
+            </div>
+            <div class="sh-topbar__actions">
+              <button class="sh-iconbtn" type="button" aria-label="History">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </button>
+              <button class="sh-iconbtn" type="button" aria-label="Settings">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8l-1.4 1.4m-10 10l-1.4 1.4"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="sh-app__body">
+
+            <div class="sh-day sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Monday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:00 / 16:30</span>
+                  <span class="sh-day__hours">8.30 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Tuesday</span>
+                <span class="sh-day__empty">Not worked</span>
+              </button>
+            </div>
+
+            <div class="sh-day sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Wednesday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:00 / 14:15</span>
+                  <span class="sh-day__hours">6.15 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day sh-day--filled sh-day--today">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Thursday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">9:00 / 17:25</span>
+                  <span class="sh-day__hours">8.25 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Friday</span>
+                <span class="sh-day__empty">Not worked</span>
+              </button>
+            </div>
+
+            <div class="sh-day sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Saturday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:30 / 17:00</span>
+                  <span class="sh-day__hours">8.30 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Sunday</span>
+                <span class="sh-day__empty">Not worked</span>
+              </button>
+            </div>
+
+            <div class="sh-preview">
+              <span class="sh-preview__label">Message preview</span>
+              <p class="sh-preview__text">Week ending 16 August
+Monday: 8:00/16:30 - 8.30 hrs
+Wednesday: 8:00/14:15 - 6.15 hrs
+Thursday: 9:00/17:25 - 8.25 hrs
+Saturday: 8:30/17:00 - 8.30 hrs
+31 hours and 40 minutes</p>
+            </div>
+
+          </div>
+
+          <footer class="sh-bottombar">
+            <div class="sh-total">
+              <div class="sh-total__hours">31 hours 40</div>
+              <div class="sh-total__pay">Estimated pay 316.67€</div>
+            </div>
+            <button class="sh-btn" type="button">Copy summary</button>
+          </footer>
+
+        </div>
+      </div>
+      <p class="screen__note">
+        I sette giorni ci stanno tutti senza scorrere: si scorre solo per vedere
+        l'anteprima del messaggio. Il pulsante di copia non si muove mai.
+      </p>
+    </div>
+
+    <!-- ── Schermata 2: giorno aperto ── -->
+    <div class="screen">
+      <div class="screen__label">2 · Giorno aperto (lo slider sta dentro la riga)</div>
+      <div class="frame">
+        <div class="sh-app">
+
+          <header class="sh-topbar">
+            <div class="sh-topbar__main">
+              <div class="sh-topbar__week">Week ending 16 August</div>
+              <button class="sh-chip" type="button">Week ▾</button>
+            </div>
+            <div class="sh-topbar__actions">
+              <button class="sh-iconbtn" type="button" aria-label="History">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </button>
+              <button class="sh-iconbtn" type="button" aria-label="Settings">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8l-1.4 1.4m-10 10l-1.4 1.4"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="sh-app__body">
+
+            <div class="sh-day sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Monday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:00 / 16:30</span>
+                  <span class="sh-day__hours">8.30 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Tuesday</span>
+                <span class="sh-day__empty">Not worked</span>
+              </button>
+            </div>
+
+            <!-- giorno aperto -->
+            <div class="sh-day sh-day--open sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Wednesday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:00 / 14:15</span>
+                  <span class="sh-day__hours">6.15 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+              <div class="sh-day__panel">
+                <div class="sh-range">
+                  <div class="sh-range__readout">
+                    8:00 / 14:15
+                    <span class="sh-range__duration">6.15 hrs</span>
+                  </div>
+                  <div class="sh-range__track">
+                    <div class="sh-range__rail"></div>
+                    <div class="sh-range__fill" style="left: 16%; width: 33%"></div>
+                    <div class="sh-range__handle" style="left: 16%"></div>
+                    <div class="sh-range__handle" style="left: 49%"></div>
+                  </div>
+                  <div class="sh-nudges">
+                    <div class="sh-nudge">
+                      <button class="sh-nudge__btn" type="button" aria-label="Start earlier">−</button>
+                      <span class="sh-nudge__label">Start</span>
+                      <button class="sh-nudge__btn" type="button" aria-label="Start later">+</button>
+                    </div>
+                    <div class="sh-nudge">
+                      <button class="sh-nudge__btn" type="button" aria-label="End earlier">−</button>
+                      <span class="sh-nudge__label">End</span>
+                      <button class="sh-nudge__btn" type="button" aria-label="End later">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sh-day sh-day--filled sh-day--today">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Thursday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">9:00 / 17:25</span>
+                  <span class="sh-day__hours">8.25 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+            <div class="sh-day">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Friday</span>
+                <span class="sh-day__empty">Not worked</span>
+              </button>
+            </div>
+
+            <div class="sh-day sh-day--filled">
+              <button class="sh-day__head" type="button">
+                <span class="sh-day__name">Saturday</span>
+                <span class="sh-day__value">
+                  <span class="sh-day__times">8:30 / 17:00</span>
+                  <span class="sh-day__hours">8.30 hrs</span>
+                </span>
+                <span class="sh-day__clear" aria-hidden="true">✕</span>
+              </button>
+            </div>
+
+          </div>
+
+          <footer class="sh-bottombar">
+            <div class="sh-total">
+              <div class="sh-total__hours">31 hours 40</div>
+              <div class="sh-total__pay">Estimated pay 316.67€</div>
+            </div>
+            <button class="sh-btn" type="button">Copy summary</button>
+          </footer>
+
+        </div>
+      </div>
+      <p class="screen__note">
+        Si apre un giorno alla volta e gli altri restano visibili: non cambia
+        schermata, non perde il filo.
+      </p>
+    </div>
+
+    <!-- ── Schermata 3: storico ── -->
+    <div class="screen">
+      <div class="screen__label">3 · Storico</div>
+      <div class="frame">
+        <div class="sh-panel">
+          <header class="sh-panel__head">
+            <span class="sh-panel__title">History</span>
+            <button class="sh-iconbtn" type="button" aria-label="Close">✕</button>
+          </header>
+          <div class="sh-panel__body">
+            <button class="sh-histrow" type="button">
+              <span class="sh-histrow__main">
+                <span class="sh-histrow__week">Week ending 9 August 2026</span><br>
+                <span class="sh-histrow__meta">38 hours and 15 minutes · 5 days</span>
+              </span>
+              <span class="sh-histrow__chevron">›</span>
+            </button>
+            <button class="sh-histrow" type="button">
+              <span class="sh-histrow__main">
+                <span class="sh-histrow__week">Week ending 2 August 2026</span><br>
+                <span class="sh-histrow__meta">41 hours · 5 days</span>
+              </span>
+              <span class="sh-histrow__chevron">›</span>
+            </button>
+            <button class="sh-histrow" type="button">
+              <span class="sh-histrow__main">
+                <span class="sh-histrow__week">Week ending 26 July 2026</span><br>
+                <span class="sh-histrow__meta">15 hours · 2 days</span>
+              </span>
+              <span class="sh-histrow__chevron">›</span>
+            </button>
+            <button class="sh-histrow" type="button">
+              <span class="sh-histrow__main">
+                <span class="sh-histrow__week">Week ending 19 July 2026</span><br>
+                <span class="sh-histrow__meta">35 hours and 30 minutes · 4 days</span>
+              </span>
+              <span class="sh-histrow__chevron">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="screen__note">
+        Toccando una settimana si riapre uguale alla corrente: si può correggere
+        un orario, ricopiare il messaggio o eliminarla.
+      </p>
+    </div>
+
+    <!-- ── Schermata 4: impostazioni ── -->
+    <div class="screen">
+      <div class="screen__label">4 · Impostazioni</div>
+      <div class="frame">
+        <div class="sh-panel">
+          <header class="sh-panel__head">
+            <span class="sh-panel__title">Settings</span>
+            <button class="sh-iconbtn" type="button" aria-label="Close">✕</button>
+          </header>
+          <div class="sh-panel__body">
+
+            <span class="sh-section__label">Pay</span>
+            <div class="sh-field">
+              <span class="sh-field__label">Hourly rate</span>
+              <input class="sh-field__input" type="text" inputmode="decimal" placeholder="—" aria-label="Hourly rate">
+            </div>
+            <p style="margin: 0; font-size: var(--sh-size-xs); color: var(--sh-text-muted)">
+              Leave empty to hide estimated pay.
+            </p>
+
+            <span class="sh-section__label" style="margin-top: var(--sh-space-4)">Week types</span>
+            <div class="sh-field"><span class="sh-field__label">Week</span><span class="sh-field__label" style="color: var(--sh-text-muted); font-size: var(--sh-size-sm)">Mon–Sun</span></div>
+            <div class="sh-field"><span class="sh-field__label">Weekend</span><span class="sh-field__label" style="color: var(--sh-text-muted); font-size: var(--sh-size-sm)">Sat–Sun</span></div>
+
+            <div class="sh-field" style="flex-direction: column; align-items: stretch; gap: var(--sh-space-3)">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--sh-space-3)">
+                <span class="sh-field__label">☕ Mornings</span>
+                <span class="sh-iconbtn" role="button" aria-label="Delete">✕</span>
+              </div>
+              <div class="sh-daypicker">
+                <button class="sh-daypicker__day" type="button" aria-pressed="true">M</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="false">T</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="true">W</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="false">T</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="true">F</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="false">S</button>
+                <button class="sh-daypicker__day" type="button" aria-pressed="false">S</button>
+              </div>
+            </div>
+
+            <button class="sh-btn sh-btn--secondary" type="button">Add week type</button>
+
+            <span class="sh-section__label" style="margin-top: var(--sh-space-4)">Data</span>
+            <button class="sh-btn sh-btn--secondary" type="button">Download backup</button>
+            <button class="sh-btn sh-btn--danger" type="button">Clear this week</button>
+
+          </div>
+        </div>
+      </div>
+      <p class="screen__note">
+        La paga oraria parte vuota: finché non la scrive lei, l'app non mostra
+        nessuna stima. Non è scritta da nessuna parte nel codice.
+      </p>
+    </div>
+
+  </div>
+
+  <hr>
+  <p style="margin-top: var(--sh-space-4)">
+    Task 0 — base grafica provvisoria. I valori vivono in
+    <code>tokens/colors.css</code>, <code>tokens/typography.css</code>,
+    <code>tokens/space.css</code>; i componenti in <code>components.css</code>.
+  </p>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+/* Shift Hours — token colore (base provvisoria, Fase 1)
+ *
+ * Palette volutamente minima: bianco, nero, un blu.
+ * Nessun colore va scritto a mano fuori da questo file.
+ * Contrasti verificati su sfondo bianco (WCAG AA = 4.5:1 per il testo normale).
+ */
+
+:root {
+  /* Superfici */
+  --sh-bg: #ffffff;              /* sfondo dell'app */
+  --sh-surface: #f4f6fa;         /* card e righe */
+  --sh-surface-sunken: #eceff5;  /* traccia slider, campi */
+  --sh-border: #dde1ea;
+  --sh-border-strong: #c3c9d6;
+
+  /* Testo */
+  --sh-text: #000000;            /* 21.0:1 su bianco */
+  --sh-text-muted: #5a616e;      /* 7.0:1 su bianco */
+  --sh-text-disabled: #9aa1af;   /* solo su elementi spenti, mai testo utile */
+  --sh-text-on-primary: #ffffff; /* 7.6:1 su --sh-primary */
+
+  /* Blu — unico colore d'azione */
+  --sh-primary: #1b47c9;         /* 7.6:1 con bianco */
+  --sh-primary-pressed: #14349b;
+  --sh-primary-tint: #e8edfc;    /* sfondi tenui, giorno di oggi */
+  --sh-primary-tint-strong: #ccd8f8;
+
+  /* Rosso — solo per eliminare, mai decorativo */
+  --sh-danger: #c22a1f;          /* 5.6:1 su bianco */
+  --sh-danger-tint: #fdecea;
+
+  /* Elementi spenti */
+  --sh-disabled-bg: #e6e9ef;
+  --sh-disabled-text: #8b92a1;
+
+  /* Ombre */
+  --sh-shadow-color: 220 25% 12%;
+}

@@ -62,6 +62,9 @@ desktop, ma iPhone è il target su cui si decide ogni compromesso.
 12. **Nessun file fuori dalla cartella `shift-hours/`** senza istruzione
     esplicita dell'utente (unica eccezione prevista: il workflow di deploy del
     Task 9, che per forza vive alla root del repo e va autorizzato a parte).
+13. **La paga oraria non si scrive mai nel codice.** È un importo personale e il
+    repo è pubblico: vive solo in `localStorage`, inserita da lei una volta
+    nelle impostazioni. Nessun valore di default nel sorgente.
 
 ---
 
@@ -83,6 +86,23 @@ desktop, ma iPhone è il target su cui si decide ogni compromesso.
 - **Identità visiva:** vedi Task 0. In questa fase è una **base minima e
   provvisoria**, pensata solo per poter provare le funzioni; verrà ridisegnata
   in seguito da Claude Design sostituendo il solo pacchetto `design_handoff/`.
+
+**Deve sembrare un'app, non un sito.** Vincoli di interfaccia validi per tutti i
+task:
+
+- **Tre schermate in tutto**, non una di più: settimana (quella che apre
+  sempre), storico, impostazioni. Storico e impostazioni si aprono come
+  pannelli sopra la schermata principale e si chiudono con una ✕.
+- **La schermata principale sta in una schermata sola** su iPhone 15: barra in
+  alto fissa (settimana + tipo), elenco dei giorni al centro, barra in basso
+  fissa con totale, paga stimata e pulsante di copia. Il pulsante di copia è
+  sempre raggiungibile senza scorrere.
+- **Lo slider si apre dentro la riga del giorno**, non in un'altra schermata:
+  un giorno alla volta, aprendone uno si chiude il precedente.
+- Larghezza massima del contenuto 480 px, centrato: su desktop resta una
+  colonna da telefono, non si sparpaglia.
+- Niente barre di scorrimento orizzontali, niente elementi che escono dallo
+  schermo, niente zoom automatico di Safari sui campi.
 
 ---
 
@@ -136,6 +156,7 @@ Tutti gli orari sono **minuti dalla mezzanotte**, multipli di 5. Range ammesso:
 // shifthours:settings
 {
   lastTypeId: "week",              // tipo usato per l'ultima settimana aperta
+  hourlyRate: null,                // paga oraria netta, inserita da lei. null = paga nascosta
   customTypes: [                   // massimo 3
     { id: "custom-1", name: "☕ Mornings", days: [1,3,5] }
   ]
@@ -238,6 +259,23 @@ di copia è spento e mostra `No hours added this week yet`.
 Nessuna riga vuota, nessun separatore, nessuna emoji, nessun nome di tipo di
 settimana dentro il messaggio.
 
+### 5.1 Paga stimata — solo dentro l'app
+
+Accanto al totale della settimana l'app mostra una stima di quanto ha
+guadagnato: **ore totali × paga oraria netta**.
+
+- Il calcolo usa le **ore decimali vere**, non la notazione ore.minuti: una
+  settimana da `45 hours and 25 minutes` vale 45,4167 ore (non 45,25), quindi
+  con paga 9.45 → `429.14`.
+- Arrotondamento a 2 decimali, formato `429.14€`.
+- La paga oraria si inserisce **una volta** nelle impostazioni. Finché non c'è,
+  la riga della paga non compare affatto: l'app funziona identica senza.
+- **La paga stimata non entra mai nel messaggio copiato.** Il messaggio che va
+  al capo resta esattamente quello della sezione 5. La stima è
+  un'informazione per lei.
+- È una **stima**, e l'etichetta lo dice (`Estimated pay`): non tiene conto di
+  straordinari, festivi, trattenute o arrotondamenti del datore di lavoro.
+
 ---
 
 ## 6. Task
@@ -262,8 +300,12 @@ di passare al successivo.
     utile ≥ 44×44 px, come da linee guida iOS.
   - `reference.html` mostra tutti i componenti previsti (riga-giorno vuota,
     riga-giorno compilata con ✕, slider, pulsanti ±, selettore del tipo di
-    settimana, pulsante primario, pulsante disabilitato, banner di notifica,
-    riga dello storico) e si apre senza errori in console.
+    settimana, barra in basso con totale e paga stimata, pulsante primario,
+    pulsante disabilitato, banner di notifica, riga dello storico) e si apre
+    senza errori in console.
+  - `reference.html` mostra anche le tre schermate intere alla larghezza di un
+    iPhone 15 (settimana, storico, impostazioni), per verificare il vincolo
+    "deve sembrare un'app" prima di scrivere il codice vero.
   - Nessun colore scritto a mano fuori dai token.
 - **Vincolo:** è una base **provvisoria e volutamente minimale**, serve solo per
   provare le funzioni. Deve essere sostituibile in blocco da Claude Design senza
@@ -311,7 +353,11 @@ di passare al successivo.
     lavorato"; i giorni non lavorati non mostrano la ✕.
   - Totale della settimana ricalcolato ad ogni modifica, nel formato della
     sezione 5 (`45 hours` / `45 hours and 25 minutes`).
+  - Accanto al totale, la paga stimata come da sezione 5.1, se la paga oraria è
+    stata impostata; altrimenti niente.
   - Il giorno di oggi è visivamente evidenziato.
+  - Su iPhone 15 la schermata sta tutta dentro senza scorrere quando il tipo di
+    settimana è `Weekend`, e con al massimo uno scorrimento breve con `Week`.
 
 ### Task 4 — Tipi di settimana
 - **File:** `src/js/app.js`, `src/js/storage.js`.
@@ -330,6 +376,9 @@ di passare al successivo.
     conservano il nome che avevano.
   - La scelta persiste tra le sessioni: una settimana nuova si apre già con il
     tipo usato l'ultima volta.
+  - Nelle impostazioni c'è il campo **paga oraria netta**: vuoto di default, mai
+    precompilato nel codice (regola 13), con tastierino numerico. Svuotarlo fa
+    sparire la paga stimata ovunque nell'app.
 
 ### Task 5 — Messaggio e copia
 - **File:** `src/js/summary.js`.
@@ -440,6 +489,11 @@ solo a fine review.
    redesign successivo affidato a Claude Design.
 8. **Target dichiarato iPhone/Safari**, con conseguenze esplicite su safe area,
    dimensioni dei tocchi e installazione dalla home.
+9. **Aggiunta la paga stimata** (ore × paga oraria netta), visibile solo dentro
+   l'app e mai nel messaggio, con la paga oraria salvata solo sul telefono.
+10. **Aggiunti i vincoli "deve sembrare un'app"**: tre schermate in tutto,
+    schermata principale senza scorrimenti inutili, slider dentro la riga del
+    giorno.
 
 ## 10. Nota sul metodo
 

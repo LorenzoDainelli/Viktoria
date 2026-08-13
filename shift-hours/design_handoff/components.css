@@ -1,0 +1,588 @@
+/* Shift Hours — foglio componenti (base provvisoria, Fase 1)
+ *
+ * Usa solo i token di tokens/. Nessun colore, dimensione o durata scritti a
+ * mano qui dentro: se manca un valore, si aggiunge un token, non un numero.
+ *
+ * Indice
+ *   1. Reset e shell dell'app
+ *   2. Barra in alto (settimana + tipo)
+ *   3. Riga del giorno
+ *   4. Slider orario
+ *   5. Pulsanti
+ *   6. Barra in basso (totale, paga, copia)
+ *   7. Pannelli (storico, impostazioni)
+ *   8. Banner di notifica
+ *   9. Utilità
+ */
+
+/* ── 1. Reset e shell ─────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%; /* Safari non ingrandisce da solo */
+}
+
+body {
+  margin: 0;
+  background: var(--sh-bg);
+  color: var(--sh-text);
+  font-family: var(--sh-font);
+  font-size: var(--sh-size-md);
+  line-height: var(--sh-leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sh-primary);
+  outline-offset: 2px;
+  border-radius: var(--sh-radius-sm);
+}
+
+/* La schermata dell'app: barra alta fissa, lista che scorre, barra bassa fissa.
+   Il contenuto non supera mai la larghezza di un telefono. */
+.sh-app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  min-height: 100dvh;
+  margin-inline: auto;
+  background: var(--sh-bg);
+  overflow: hidden;
+}
+
+.sh-app__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sh-space-3) var(--sh-space-4) var(--sh-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+}
+
+/* ── 2. Barra in alto ─────────────────────────────────────────────── */
+
+.sh-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  padding: var(--sh-space-3) var(--sh-space-4);
+  padding-top: max(var(--sh-space-3), env(safe-area-inset-top));
+  border-bottom: 1px solid var(--sh-border);
+  background: var(--sh-bg);
+}
+
+.sh-topbar__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sh-space-2);
+  min-width: 0;
+}
+
+.sh-topbar__week {
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+  line-height: var(--sh-leading-tight);
+}
+
+.sh-topbar__actions {
+  display: flex;
+  gap: var(--sh-space-1);
+}
+
+/* Chip: selettore del tipo di settimana e pulsanti icona della barra */
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  min-height: var(--sh-touch-min);
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary-tint);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+}
+
+.sh-chip:active { background: var(--sh-primary-tint-strong); }
+
+.sh-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  color: var(--sh-text-muted);
+}
+
+.sh-iconbtn:active { background: var(--sh-surface); }
+
+/* ── 3. Riga del giorno ───────────────────────────────────────────── */
+
+.sh-day {
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-bg);
+  transition: border-color var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-day--filled {
+  border-color: var(--sh-primary-tint-strong);
+  background: var(--sh-bg);
+}
+
+.sh-day--today { border-color: var(--sh-primary); }
+
+.sh-day--open {
+  border-color: var(--sh-primary);
+  box-shadow: var(--sh-shadow-md);
+}
+
+/* Riga sempre visibile: nome, orari, ore, ✕ */
+.sh-day__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--sh-space-2) var(--sh-space-2) var(--sh-space-2) var(--sh-space-4);
+  text-align: left;
+}
+
+.sh-day__name {
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+  min-width: 5.5em;
+}
+
+.sh-day__value {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sh-day__times {
+  font-family: var(--sh-font-numeric);
+  font-size: var(--sh-size-md);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sh-day__hours {
+  font-size: var(--sh-size-sm);
+  color: var(--sh-text-muted);
+}
+
+.sh-day__empty {
+  flex: 1;
+  font-size: var(--sh-size-md);
+  color: var(--sh-text-muted);
+}
+
+/* La ✕ compare solo sui giorni impostati */
+.sh-day__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-lg);
+}
+
+.sh-day__clear:active {
+  background: var(--sh-danger-tint);
+  color: var(--sh-danger);
+}
+
+/* Corpo che si apre dentro la riga: nessun cambio di schermata */
+.sh-day__panel {
+  padding: 0 var(--sh-space-4) var(--sh-space-4);
+  border-top: 1px solid var(--sh-border);
+  margin-top: var(--sh-space-1);
+  padding-top: var(--sh-space-4);
+}
+
+/* ── 4. Slider orario ─────────────────────────────────────────────── */
+
+.sh-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-4);
+}
+
+.sh-range__readout {
+  text-align: center;
+  font-family: var(--sh-font-numeric);
+  font-size: var(--sh-size-2xl);
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-range__duration {
+  display: block;
+  margin-top: var(--sh-space-1);
+  font-family: var(--sh-font);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-regular);
+  color: var(--sh-text-muted);
+}
+
+.sh-range__track {
+  position: relative;
+  height: var(--sh-handle-hit);
+  display: flex;
+  align-items: center;
+}
+
+.sh-range__rail {
+  position: absolute;
+  inset-inline: 0;
+  height: 8px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface-sunken);
+}
+
+.sh-range__fill {
+  position: absolute;
+  height: 8px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary);
+}
+
+.sh-range__handle {
+  position: absolute;
+  width: var(--sh-handle-hit);
+  height: var(--sh-handle-hit);
+  margin-inline-start: calc(var(--sh-handle-hit) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.sh-range__handle::before {
+  content: "";
+  width: var(--sh-handle-size);
+  height: var(--sh-handle-size);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  border: 3px solid var(--sh-primary);
+  box-shadow: var(--sh-shadow-md);
+  transition: transform var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-range__handle:active::before { transform: scale(1.15); }
+
+/* Regolazione fine: due coppie − / +, una per l'inizio e una per la fine */
+.sh-nudges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sh-space-3);
+}
+
+.sh-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-2);
+  padding: var(--sh-space-2);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+}
+
+.sh-nudge__label {
+  font-size: var(--sh-size-xs);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+}
+
+.sh-nudge__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-bold);
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.sh-nudge__btn:active { background: var(--sh-primary-tint); }
+
+/* ── 5. Pulsanti ──────────────────────────────────────────────────── */
+
+.sh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sh-space-2);
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--sh-space-5);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary);
+  color: var(--sh-text-on-primary);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-btn:active { background: var(--sh-primary-pressed); }
+
+.sh-btn--secondary {
+  background: var(--sh-surface);
+  color: var(--sh-primary);
+}
+
+.sh-btn--danger {
+  background: var(--sh-danger-tint);
+  color: var(--sh-danger);
+}
+
+.sh-btn[disabled],
+.sh-btn--disabled {
+  background: var(--sh-disabled-bg);
+  color: var(--sh-disabled-text);
+  cursor: default;
+}
+
+.sh-btn--auto { width: auto; }
+
+/* ── 6. Barra in basso ────────────────────────────────────────────── */
+
+.sh-bottombar {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  padding: var(--sh-space-3) var(--sh-space-4);
+  padding-bottom: max(var(--sh-space-3), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--sh-border);
+  background: var(--sh-bg);
+  box-shadow: var(--sh-shadow-bar);
+}
+
+.sh-total { flex: 1; min-width: 0; }
+
+.sh-total__hours {
+  font-size: var(--sh-size-xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tight);
+  line-height: var(--sh-leading-tight);
+}
+
+/* Paga stimata: compare solo se lei ha inserito la paga oraria */
+.sh-total__pay {
+  font-size: var(--sh-size-sm);
+  color: var(--sh-text-muted);
+}
+
+.sh-bottombar .sh-btn { width: auto; flex: none; }
+
+/* ── 7. Pannelli (storico, impostazioni) ──────────────────────────── */
+
+.sh-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  min-height: 100dvh;
+  margin-inline: auto;
+  background: var(--sh-bg);
+}
+
+.sh-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  padding: var(--sh-space-3) var(--sh-space-4);
+  padding-top: max(var(--sh-space-3), env(safe-area-inset-top));
+  border-bottom: 1px solid var(--sh-border);
+}
+
+.sh-panel__title {
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+}
+
+.sh-panel__body {
+  overflow-y: auto;
+  padding: var(--sh-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-3);
+}
+
+.sh-section__label {
+  font-size: var(--sh-size-xs);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+}
+
+/* Riga dello storico */
+.sh-histrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sh-space-3) var(--sh-space-4);
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-md);
+  text-align: left;
+}
+
+.sh-histrow__main { flex: 1; min-width: 0; }
+
+.sh-histrow__week {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+}
+
+.sh-histrow__meta {
+  font-size: var(--sh-size-sm);
+  color: var(--sh-text-muted);
+}
+
+.sh-histrow__chevron { color: var(--sh-text-muted); }
+
+/* Campi delle impostazioni */
+.sh-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  min-height: var(--sh-touch-min);
+  padding: var(--sh-space-3) var(--sh-space-4);
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-radius-md);
+}
+
+.sh-field__label { font-size: var(--sh-size-md); }
+
+.sh-field__input {
+  width: 7em;
+  padding: var(--sh-space-2) var(--sh-space-3);
+  border: 1px solid var(--sh-border-strong);
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-bg);
+  color: var(--sh-text);
+  font-family: var(--sh-font-numeric);
+  font-size: var(--sh-size-md); /* mai sotto 16px: Safari zoomerebbe */
+  text-align: end;
+}
+
+.sh-daypicker {
+  display: flex;
+  gap: var(--sh-space-2);
+  flex-wrap: wrap;
+}
+
+.sh-daypicker__day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  border: 1px solid var(--sh-border-strong);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+}
+
+.sh-daypicker__day[aria-pressed="true"] {
+  background: var(--sh-primary);
+  border-color: var(--sh-primary);
+  color: var(--sh-text-on-primary);
+}
+
+/* Anteprima del messaggio: sta in fondo alla lista dei giorni, così quello che
+   legge è esattamente quello che copierà. */
+.sh-preview {
+  margin-top: var(--sh-space-3);
+  padding: var(--sh-space-4);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+}
+
+.sh-preview__label {
+  display: block;
+  margin-bottom: var(--sh-space-2);
+  font-size: var(--sh-size-xs);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--sh-tracking-wide);
+}
+
+.sh-preview__text {
+  margin: 0;
+  font-family: var(--sh-font);
+  font-size: var(--sh-size-sm);
+  line-height: var(--sh-leading-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ── 8. Banner di notifica ────────────────────────────────────────── */
+
+.sh-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  padding: var(--sh-space-3) var(--sh-space-4);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-primary-tint);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-medium);
+  box-shadow: var(--sh-shadow-md);
+}
+
+/* ── 9. Utilità ───────────────────────────────────────────────────── */
+
+.sh-hidden { display: none !important; }
+
+.sh-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

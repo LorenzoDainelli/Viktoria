@@ -1,0 +1,46 @@
+/* Shift Hours — token spaziature, raggi, ombre, movimento
+ * (base provvisoria, Fase 1)
+ */
+
+:root {
+  /* Spaziature — scala da 4px */
+  --sh-space-1: 0.25rem;   /*  4px */
+  --sh-space-2: 0.5rem;    /*  8px */
+  --sh-space-3: 0.75rem;   /* 12px */
+  --sh-space-4: 1rem;      /* 16px */
+  --sh-space-5: 1.25rem;   /* 20px */
+  --sh-space-6: 1.5rem;    /* 24px */
+  --sh-space-8: 2rem;      /* 32px */
+
+  /* Raggi */
+  --sh-radius-sm: 0.5rem;    /*  8px */
+  --sh-radius-md: 0.875rem;  /* 14px — card dei giorni */
+  --sh-radius-lg: 1.25rem;   /* 20px — pannelli */
+  --sh-radius-pill: 999px;   /* pulsanti e chip */
+
+  /* Ombre — leggerissime, l'app è chiara e piatta */
+  --sh-shadow-sm: 0 1px 2px hsl(var(--sh-shadow-color) / 0.06);
+  --sh-shadow-md: 0 2px 8px hsl(var(--sh-shadow-color) / 0.10);
+  --sh-shadow-bar: 0 -2px 12px hsl(var(--sh-shadow-color) / 0.08);
+
+  /* Target di tocco — minimo iOS, mai scendere sotto */
+  --sh-touch-min: 44px;
+  --sh-handle-size: 32px;      /* parte visibile della maniglia */
+  --sh-handle-hit: 48px;       /* area sensibile al dito */
+
+  /* Layout */
+  --sh-app-max-width: 480px;
+  --sh-bar-height: 64px;
+
+  /* Movimento — breve, mai vistoso */
+  --sh-motion-fast: 120ms;
+  --sh-motion-normal: 200ms;
+  --sh-motion-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sh-motion-fast: 0ms;
+    --sh-motion-normal: 0ms;
+  }
+}
