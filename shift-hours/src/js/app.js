@@ -1,19 +1,23 @@
 /* Shift Hours — orchestrazione dell'interfaccia.
  *
- * Tre schermate in tutto: la settimana, le impostazioni, la scelta del tipo
- * di settimana. Nessuna navigazione, nessun concetto tecnico visibile.
+ * Tre schermate in tutto: la settimana, lo storico, le impostazioni.
+ * La stessa schermata della settimana serve anche a rivedere e correggere una
+ * settimana passata: non c'è una quarta schermata da imparare.
  */
 
 import {
   DAY_INITIALS,
   DAY_NAMES,
   formatDayMonth,
+  formatDayMonthYear,
   formatDuration,
   formatHrs,
   formatTime,
   shiftMinutes,
   sundayOf,
+  toISODate,
   totalMinutes,
+  totalMinutes as sumMinutes,
   workedDays,
 } from "./week.js";
 
@@ -22,13 +26,18 @@ import {
   MAX_TYPE_NAME,
   allTypes,
   currentWeekStart,
+  deleteHistoryWeek,
+  exportAll,
+  findHistoryWeek,
   findType,
   loadCurrentWeek,
+  loadHistory,
   loadSettings,
   newWeek,
   pushHistory,
   saveCurrentWeek,
   saveSettings,
+  updateHistoryWeek,
 } from "./storage.js";
 
 import { createRangeSlider } from "./slider.js";
@@ -42,8 +51,9 @@ const el = (id) => document.getElementById(id);
 let settings = loadSettings();
 let week;
 let type;
+let viewing = null; // null = settimana corrente, altrimenti la data di una passata
 let openDay = null;
-let slider = null;
+let confirmAction = null;
 
 /* ── Avvio ────────────────────────────────────────────────────────── */
 
@@ -77,11 +87,13 @@ function applyType(nextType, { save = true } = {}) {
   type = nextType;
   week.typeId = type.id;
   week.typeName = type.name;
-  if (save) saveCurrentWeek(week);
+  week.typeDays = [...type.days];
+  if (save) persist();
 }
 
 function persist() {
-  saveCurrentWeek(week);
+  if (viewing) updateHistoryWeek(week);
+  else saveCurrentWeek(week);
 }
 
 function todayNumber() {
@@ -89,7 +101,12 @@ function todayNumber() {
 }
 
 function isCurrentWeek() {
-  return week.weekStart === currentWeekStart();
+  return !viewing && week.weekStart === currentWeekStart();
+}
+
+/** I giorni di una settimana archiviata restano quelli che aveva allora. */
+function daysOfWeek(entry) {
+  return entry.typeDays?.length ? entry.typeDays : findType(settings, entry.typeId).days;
 }
 
 /* ── Rendering ────────────────────────────────────────────────────── */
@@ -97,6 +114,16 @@ function isCurrentWeek() {
 function render() {
   el("week-title").textContent = formatDayMonth(sundayOf(week.weekStart));
   el("type-name").textContent = type.name;
+  el("hero-label").textContent = viewing ? "Saved week" : "This week";
+
+  // In una settimana passata si correggono gli orari, non il tipo di settimana.
+  el("open-types").disabled = Boolean(viewing);
+  // toggleAttribute e non .hidden: su un elemento SVG la proprietà non esiste.
+  el("type-caret").toggleAttribute("hidden", Boolean(viewing));
+  el("back-to-current").hidden = !viewing;
+  el("open-history").hidden = Boolean(viewing);
+  el("open-settings").hidden = Boolean(viewing);
+
   renderDays();
   renderTotals();
 }
@@ -152,7 +179,7 @@ function mountSlider() {
   if (!panel) return;
   const shift = week.days[openDay];
 
-  slider = createRangeSlider(panel, {
+  createRangeSlider(panel, {
     start: shift.start,
     end: shift.end,
     onChange: (start, end) => {
@@ -172,18 +199,20 @@ function renderTotals() {
   el("total-hours").textContent = formatDuration(total);
 
   const rate = settings.hourlyRate;
-  const payLine = el("pay-line");
   if (rate) {
     el("pay-value").textContent = `${((total / 60) * rate).toFixed(2)}€`;
-    payLine.hidden = false;
+    el("pay-line").hidden = false;
   } else {
-    payLine.hidden = true;
+    el("pay-line").hidden = true;
   }
 
   const summary = buildSummary(week, type.days);
   el("preview").hidden = summary === null;
   if (summary) el("preview-text").textContent = summary;
   el("copy").disabled = summary === null;
+
+  el("clear-week").hidden = Boolean(viewing) || summary === null;
+  el("delete-week").hidden = !viewing;
 }
 
 /* ── Interazioni della settimana ──────────────────────────────────── */
@@ -213,6 +242,99 @@ async function copySummary() {
   toast(done ? "Copied" : "Could not copy — press and hold the message to copy it");
 }
 
+/* ── Storico ──────────────────────────────────────────────────────── */
+
+function openHistory() {
+  const history = loadHistory();
+
+  el("history-list").innerHTML = history.length
+    ? history.map(historyRow).join("")
+    : '<p class="sh-empty">Your past weeks will show up here, one for each week you fill in.</p>';
+
+  el("history-layer").hidden = false;
+}
+
+function historyRow(entry) {
+  const days = daysOfWeek(entry);
+  const worked = workedDays(entry, days).length;
+  const sunday = sundayOf(entry.weekStart);
+
+  return `
+    <button class="sh-histrow" type="button" data-week="${entry.weekStart}">
+      <span class="sh-histrow__main">
+        <span class="sh-histrow__week">Week ending ${formatDayMonth(sunday)}</span>
+        <span class="sh-histrow__meta">${sunday.getFullYear()} · ${worked} ${worked === 1 ? "day" : "days"}</span>
+      </span>
+      <span class="sh-histrow__hours">${formatDuration(sumMinutes(entry, days))}</span>
+      <span class="sh-histrow__chevron" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </span>
+    </button>`;
+}
+
+function openPastWeek(weekStartISO) {
+  const entry = findHistoryWeek(weekStartISO);
+  if (!entry) return;
+
+  viewing = weekStartISO;
+  week = entry;
+  type = { id: entry.typeId, name: entry.typeName, days: daysOfWeek(entry) };
+  openDay = null;
+
+  el("history-layer").hidden = true;
+  render();
+}
+
+function backToCurrent() {
+  viewing = null;
+  openDay = null;
+  settings = loadSettings();
+  week = loadCurrentWeek() || newWeek(currentWeekStart(), findType(settings, settings.lastTypeId));
+  applyType(findType(settings, week.typeId), { save: false });
+  render();
+}
+
+/* ── Cancellazioni, sempre con conferma ───────────────────────────── */
+
+function askConfirm(message, label, action) {
+  el("confirm-text").textContent = message;
+  el("confirm-yes").textContent = label;
+  confirmAction = action;
+  el("scrim").hidden = false;
+  el("confirm-sheet").hidden = false;
+}
+
+function closeSheets() {
+  el("scrim").hidden = true;
+  el("type-sheet").hidden = true;
+  el("confirm-sheet").hidden = true;
+  confirmAction = null;
+}
+
+function clearWeek() {
+  askConfirm(
+    "Clear all the hours in this week? The week stays, the hours go.",
+    "Clear the week",
+    () => {
+      week.days = {};
+      openDay = null;
+      persist();
+      render();
+      toast("Week cleared");
+    }
+  );
+}
+
+function deleteWeek() {
+  const label = formatDayMonthYear(sundayOf(week.weekStart));
+  askConfirm(`Delete the week ending ${label}? This cannot be undone.`, "Delete the week", () => {
+    deleteHistoryWeek(week.weekStart);
+    backToCurrent();
+    toast("Week deleted");
+  });
+}
+
 /* ── Tipo di settimana ────────────────────────────────────────────── */
 
 function daysLabel(days) {
@@ -220,6 +342,8 @@ function daysLabel(days) {
 }
 
 function openTypeSheet() {
+  if (viewing) return;
+
   el("type-options").innerHTML = allTypes(settings)
     .map(
       (t) => `
@@ -230,22 +354,17 @@ function openTypeSheet() {
       </button>`
     )
     .join("");
+
   el("scrim").hidden = false;
   el("type-sheet").hidden = false;
 }
 
-function closeTypeSheet() {
-  el("scrim").hidden = true;
-  el("type-sheet").hidden = true;
-}
-
 function chooseType(typeId) {
-  const next = findType(settings, typeId);
-  applyType(next);
-  settings.lastTypeId = next.id;
+  applyType(findType(settings, typeId));
+  settings.lastTypeId = type.id;
   saveSettings(settings);
   openDay = null;
-  closeTypeSheet();
+  closeSheets();
   render();
 }
 
@@ -365,6 +484,37 @@ function readRate(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+/* ── Backup ───────────────────────────────────────────────────────── */
+
+async function downloadBackup() {
+  const content = JSON.stringify(exportAll(), null, 2);
+  const name = `shift-hours-backup-${toISODate(new Date())}.json`;
+
+  // Su iPhone il modo naturale di salvare un file è il pannello di condivisione
+  // ("Salva su File"); altrove si scarica come un file qualsiasi.
+  if (navigator.canShare) {
+    const file = new File([content], name, { type: "application/json" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return; // ha annullato lei
+      }
+    }
+  }
+
+  const url = URL.createObjectURL(new Blob([content], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Backup saved");
+}
+
 /* ── Notifiche ────────────────────────────────────────────────────── */
 
 function toast(message, ms = 4000) {
@@ -403,12 +553,29 @@ function bindEvents() {
 
   el("copy").addEventListener("click", copySummary);
   el("open-types").addEventListener("click", openTypeSheet);
-  el("scrim").addEventListener("click", closeTypeSheet);
   el("open-settings").addEventListener("click", openSettings);
+  el("open-history").addEventListener("click", openHistory);
+  el("back-to-current").addEventListener("click", backToCurrent);
+  el("clear-week").addEventListener("click", clearWeek);
+  el("delete-week").addEventListener("click", deleteWeek);
+  el("download-backup").addEventListener("click", downloadBackup);
+
+  el("scrim").addEventListener("click", closeSheets);
+  el("confirm-no").addEventListener("click", closeSheets);
+  el("confirm-yes").addEventListener("click", () => {
+    const action = confirmAction;
+    closeSheets();
+    action?.();
+  });
 
   el("type-sheet").addEventListener("click", (event) => {
     const option = event.target.closest("[data-type]");
     if (option) chooseType(option.dataset.type);
+  });
+
+  el("history-list").addEventListener("click", (event) => {
+    const row = event.target.closest("[data-week]");
+    if (row) openPastWeek(row.dataset.week);
   });
 
   document.addEventListener("click", (event) => {
@@ -438,7 +605,9 @@ function bindEvents() {
 
   // Se resta aperta per giorni, al rientro la settimana potrebbe essere cambiata.
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && week.weekStart !== currentWeekStart()) location.reload();
+    if (!document.hidden && !viewing && week.weekStart !== currentWeekStart()) {
+      location.reload();
+    }
   });
 }
 

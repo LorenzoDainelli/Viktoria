@@ -81,6 +81,9 @@ export function newWeek(weekStartISO, type) {
     weekStart: weekStartISO,
     typeId: type.id,
     typeName: type.name,
+    // I giorni del tipo sono salvati dentro la settimana: una settimana
+    // archiviata resta leggibile anche se quel tipo viene poi eliminato.
+    typeDays: [...type.days],
     days: {},
   };
 }
@@ -114,6 +117,23 @@ export function pushHistory(week) {
   history.unshift(week);
   history.sort((a, b) => b.weekStart.localeCompare(a.weekStart));
   return saveHistory(history);
+}
+
+/** Salva le modifiche fatte a una settimana già archiviata. */
+export function updateHistoryWeek(week) {
+  const history = loadHistory();
+  const index = history.findIndex((w) => w.weekStart === week.weekStart);
+  if (index === -1) return pushHistory(week);
+  history[index] = week;
+  return saveHistory(history);
+}
+
+export function deleteHistoryWeek(weekStartISO) {
+  return saveHistory(loadHistory().filter((w) => w.weekStart !== weekStartISO));
+}
+
+export function findHistoryWeek(weekStartISO) {
+  return loadHistory().find((w) => w.weekStart === weekStartISO) || null;
 }
 
 /* ── Backup ───────────────────────────────────────────────────────── */

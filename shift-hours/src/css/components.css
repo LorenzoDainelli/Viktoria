@@ -794,6 +794,15 @@ button { cursor: pointer; touch-action: manipulation; }
   background: var(--sh-surface-strong);
 }
 
+.sh-sheet__title {
+  margin: 0 0 var(--sh-space-2);
+  padding-inline: var(--sh-space-2);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  text-align: center;
+  text-wrap: balance;
+}
+
 .sh-sheet__option {
   display: flex;
   align-items: center;

@@ -16,15 +16,22 @@
 </head>
 <body>
 
-<!-- Schermata principale: la settimana -->
+<!-- Schermata principale: la settimana (corrente o una passata riaperta) -->
 <div class="sh-app">
 
   <header class="sh-header">
     <div>
-      <span class="sh-header__eyebrow">Week ending</span>
+      <span class="sh-header__eyebrow" id="week-eyebrow">Week ending</span>
       <h1 class="sh-header__title" id="week-title">&nbsp;</h1>
     </div>
     <div class="sh-header__actions">
+      <button class="sh-chip" type="button" id="back-to-current" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        This week
+      </button>
+      <button class="sh-iconbtn" type="button" id="open-history" aria-label="History">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>
+      </button>
       <button class="sh-iconbtn" type="button" id="open-settings" aria-label="Settings">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8.5h16M4 15.5h16"/><circle cx="15" cy="8.5" r="2.4" fill="currentColor" stroke="none"/><circle cx="9" cy="15.5" r="2.4" fill="currentColor" stroke="none"/></svg>
       </button>
@@ -35,10 +42,10 @@
 
     <section class="sh-hero">
       <div class="sh-hero__top">
-        <span class="sh-hero__label">This week</span>
+        <span class="sh-hero__label" id="hero-label">This week</span>
         <button class="sh-typepill" type="button" id="open-types">
           <span id="type-name">Week</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          <svg id="type-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </button>
       </div>
       <div class="sh-hero__total"><span id="total-hours">0</span> <span class="sh-hero__unit">hrs</span></div>
@@ -54,12 +61,32 @@
       <p class="sh-preview__bubble" id="preview-text"></p>
     </div>
 
+    <div class="sh-group" id="week-actions">
+      <button class="sh-btn sh-btn--danger" type="button" id="clear-week" hidden>Clear week</button>
+      <button class="sh-btn sh-btn--danger" type="button" id="delete-week" hidden>Delete week</button>
+    </div>
+
   </div>
 
   <footer class="sh-actionbar">
     <button class="sh-btn" type="button" id="copy" disabled>Copy summary</button>
   </footer>
 
+</div>
+
+<!-- Storico -->
+<div class="sh-layer" id="history-layer" hidden>
+  <div class="sh-panel">
+    <header class="sh-panel__head">
+      <span class="sh-panel__title">History</span>
+      <button class="sh-iconbtn" type="button" data-close="history-layer" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="sh-panel__body">
+      <div class="sh-group" id="history-list"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Impostazioni -->
@@ -93,6 +120,12 @@
         <p class="sh-group__note" id="type-note"></p>
       </div>
 
+      <div class="sh-group">
+        <span class="sh-group__label">Your hours</span>
+        <button class="sh-btn sh-btn--secondary" type="button" id="download-backup">Download backup</button>
+        <p class="sh-group__note">A copy of every week, saved to your phone.</p>
+      </div>
+
     </div>
   </div>
 </div>
@@ -102,6 +135,14 @@
 <div class="sh-sheet" id="type-sheet" hidden role="dialog" aria-label="Choose week type">
   <div class="sh-sheet__grip"></div>
   <div class="sh-group" id="type-options"></div>
+</div>
+
+<!-- Conferma prima di cancellare -->
+<div class="sh-sheet" id="confirm-sheet" hidden role="dialog" aria-label="Are you sure?">
+  <div class="sh-sheet__grip"></div>
+  <p class="sh-sheet__title" id="confirm-text"></p>
+  <button class="sh-btn sh-btn--danger" type="button" id="confirm-yes">Delete</button>
+  <button class="sh-btn sh-btn--ghost" type="button" id="confirm-no">Keep it</button>
 </div>
 
 <div class="sh-toasts" id="toasts" aria-live="polite"></div>
