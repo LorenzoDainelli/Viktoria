@@ -10,31 +10,35 @@
   --sh-space-4: 1rem;      /* 16px */
   --sh-space-5: 1.25rem;   /* 20px */
   --sh-space-6: 1.5rem;    /* 24px */
+  --sh-space-7: 1.75rem;   /* 28px */
   --sh-space-8: 2rem;      /* 32px */
 
-  /* Raggi */
-  --sh-radius-sm: 0.5rem;    /*  8px */
-  --sh-radius-md: 0.875rem;  /* 14px — card dei giorni */
-  --sh-radius-lg: 1.25rem;   /* 20px — pannelli */
-  --sh-radius-pill: 999px;   /* pulsanti e chip */
+  /* Raggi — generosi: è quello che distingue una card da un riquadro */
+  --sh-radius-sm: 0.75rem;   /* 12px */
+  --sh-radius-md: 1.125rem;  /* 18px — righe dei giorni */
+  --sh-radius-lg: 1.5rem;    /* 24px — blocco riepilogo, pannelli aperti */
+  --sh-radius-pill: 999px;
 
-  /* Ombre — leggerissime, l'app è chiara e piatta */
-  --sh-shadow-sm: 0 1px 2px hsl(var(--sh-shadow-color) / 0.06);
-  --sh-shadow-md: 0 2px 8px hsl(var(--sh-shadow-color) / 0.10);
-  --sh-shadow-bar: 0 -2px 12px hsl(var(--sh-shadow-color) / 0.08);
+  /* Ombre — quasi invisibili, servono solo a staccare ciò che è "sopra" */
+  --sh-shadow-sm: 0 1px 2px hsl(var(--sh-shadow-color) / 0.05);
+  --sh-shadow-md: 0 6px 20px -6px hsl(var(--sh-shadow-color) / 0.18);
+  --sh-shadow-hero: 0 12px 28px -12px hsl(var(--sh-shadow-color) / 0.45);
+  --sh-shadow-bar: 0 -8px 24px -12px hsl(var(--sh-shadow-color) / 0.22);
 
   /* Target di tocco — minimo iOS, mai scendere sotto */
   --sh-touch-min: 44px;
-  --sh-handle-size: 32px;      /* parte visibile della maniglia */
-  --sh-handle-hit: 48px;       /* area sensibile al dito */
+  --sh-row-height: 60px;     /* altezza di una riga-giorno */
+  --sh-handle-size: 34px;    /* parte visibile della maniglia */
+  --sh-handle-hit: 48px;     /* area sensibile al dito */
+  --sh-rail-height: 14px;
 
   /* Layout */
-  --sh-app-max-width: 480px;
-  --sh-bar-height: 64px;
+  --sh-app-max-width: 440px;
+  --sh-gutter: var(--sh-space-5);
 
   /* Movimento — breve, mai vistoso */
-  --sh-motion-fast: 120ms;
-  --sh-motion-normal: 200ms;
+  --sh-motion-fast: 140ms;
+  --sh-motion-normal: 240ms;
   --sh-motion-ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 

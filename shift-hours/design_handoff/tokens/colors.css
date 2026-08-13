@@ -1,38 +1,47 @@
 /* Shift Hours — token colore (base provvisoria, Fase 1)
  *
- * Palette volutamente minima: bianco, nero, un blu.
+ * Bianco e blu, come chiesto. Niente bordi grigi ovunque: le superfici si
+ * distinguono per riempimento, non per contorno — è quello che fa sembrare
+ * un'app un'app e non un modulo da compilare.
+ *
  * Nessun colore va scritto a mano fuori da questo file.
  * Contrasti verificati su sfondo bianco (WCAG AA = 4.5:1 per il testo normale).
  */
 
 :root {
   /* Superfici */
-  --sh-bg: #ffffff;              /* sfondo dell'app */
-  --sh-surface: #f4f6fa;         /* card e righe */
-  --sh-surface-sunken: #eceff5;  /* traccia slider, campi */
-  --sh-border: #dde1ea;
-  --sh-border-strong: #c3c9d6;
+  --sh-bg: #ffffff;
+  --sh-surface: #f4f6fc;        /* giorno non lavorato, campi */
+  --sh-surface-strong: #e9edf8; /* traccia dello slider, premuto */
+  --sh-hairline: #e8ebf5;       /* usato con parsimonia, solo separatori */
 
-  /* Testo */
-  --sh-text: #000000;            /* 21.0:1 su bianco */
-  --sh-text-muted: #5a616e;      /* 7.0:1 su bianco */
-  --sh-text-disabled: #9aa1af;   /* solo su elementi spenti, mai testo utile */
-  --sh-text-on-primary: #ffffff; /* 7.6:1 su --sh-primary */
+  /* Testo — neri e grigi con una punta di blu, non neutri da default */
+  --sh-text: #0b0f19;           /* 18.9:1 su bianco */
+  --sh-text-muted: #646c81;     /* 5.9:1 su bianco */
+  --sh-text-faint: #98a0b5;     /* solo elementi spenti */
+  --sh-on-primary: #ffffff;     /* 7.6:1 su --sh-primary */
 
   /* Blu — unico colore d'azione */
-  --sh-primary: #1b47c9;         /* 7.6:1 con bianco */
+  --sh-primary: #1b47c9;        /* 7.6:1 con bianco */
   --sh-primary-pressed: #14349b;
-  --sh-primary-tint: #e8edfc;    /* sfondi tenui, giorno di oggi */
-  --sh-primary-tint-strong: #ccd8f8;
+  --sh-primary-soft: #e8eefe;   /* giorno lavorato */
+  --sh-primary-softer: #f2f6ff;
+  --sh-primary-ink: #1237a8;    /* 8.9:1 su --sh-primary-soft */
 
-  /* Rosso — solo per eliminare, mai decorativo */
-  --sh-danger: #c22a1f;          /* 5.6:1 su bianco */
-  --sh-danger-tint: #fdecea;
+  /* Blocco riepilogo in cima */
+  --sh-hero-from: #1b47c9;
+  --sh-hero-to: #3a6bf0;
+  --sh-on-hero: #ffffff;
+  --sh-on-hero-muted: #cbd8fb;  /* 5.6:1 sul blu del blocco */
+
+  /* Rosso — solo per eliminare */
+  --sh-danger: #cc2b1d;         /* 5.4:1 su bianco */
+  --sh-danger-soft: #fdeceb;
 
   /* Elementi spenti */
-  --sh-disabled-bg: #e6e9ef;
-  --sh-disabled-text: #8b92a1;
+  --sh-disabled-bg: #eceff7;
+  --sh-disabled-text: #8b93a8;
 
   /* Ombre */
-  --sh-shadow-color: 220 25% 12%;
+  --sh-shadow-color: 224 40% 20%;
 }

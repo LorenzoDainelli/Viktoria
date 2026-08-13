@@ -3,16 +3,24 @@
  * Usa solo i token di tokens/. Nessun colore, dimensione o durata scritti a
  * mano qui dentro: se manca un valore, si aggiunge un token, non un numero.
  *
+ * Impianto visivo
+ *   - superfici piene, non bordi: le card si distinguono per riempimento
+ *   - un solo blocco protagonista in cima (il totale della settimana)
+ *   - righe alte e raggi larghi, ritmo verticale regolare
+ *   - i numeri sono il contenuto: grandi, tabellari, in evidenza
+ *
  * Indice
- *   1. Reset e shell dell'app
- *   2. Barra in alto (settimana + tipo)
- *   3. Riga del giorno
- *   4. Slider orario
- *   5. Pulsanti
- *   6. Barra in basso (totale, paga, copia)
- *   7. Pannelli (storico, impostazioni)
- *   8. Banner di notifica
- *   9. Utilità
+ *   1. Reset e shell
+ *   2. Testata
+ *   3. Blocco riepilogo (totale + paga)
+ *   4. Riga del giorno
+ *   5. Slider orario
+ *   6. Pulsanti
+ *   7. Barra d'azione in basso
+ *   8. Anteprima del messaggio
+ *   9. Pannelli (storico, impostazioni)
+ *  10. Banner di notifica
+ *  11. Utilità
  */
 
 /* ── 1. Reset e shell ─────────────────────────────────────────────── */
@@ -21,9 +29,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html {
-  -webkit-text-size-adjust: 100%; /* Safari non ingrandisce da solo */
-}
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
@@ -35,24 +41,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button {
+button, input {
   font: inherit;
   color: inherit;
   background: none;
   border: 0;
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
+
+button { cursor: pointer; touch-action: manipulation; }
 
 :focus-visible {
   outline: 3px solid var(--sh-primary);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: var(--sh-radius-sm);
 }
 
-/* La schermata dell'app: barra alta fissa, lista che scorre, barra bassa fissa.
-   Il contenuto non supera mai la larghezza di un telefono. */
+/* Testata e barra d'azione restano ferme, scorre solo la lista dei giorni */
 .sh-app {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -65,63 +70,48 @@ button {
 }
 
 .sh-app__body {
+  min-height: 0; /* senza questo la lista spinge la barra d'azione fuori schermo */
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--sh-space-3) var(--sh-space-4) var(--sh-space-4);
+  padding: 0 var(--sh-gutter) var(--sh-space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--sh-space-2);
+  gap: var(--sh-space-5);
 }
 
-/* ── 2. Barra in alto ─────────────────────────────────────────────── */
+/* ── 2. Testata ───────────────────────────────────────────────────── */
 
-.sh-topbar {
+.sh-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sh-space-3);
-  padding: var(--sh-space-3) var(--sh-space-4);
-  padding-top: max(var(--sh-space-3), env(safe-area-inset-top));
-  border-bottom: 1px solid var(--sh-border);
-  background: var(--sh-bg);
-}
-
-.sh-topbar__main {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: var(--sh-space-2);
-  min-width: 0;
+  justify-content: space-between;
+  gap: var(--sh-space-4);
+  padding: var(--sh-space-5) var(--sh-gutter) var(--sh-space-4);
+  padding-top: max(var(--sh-space-5), env(safe-area-inset-top));
 }
 
-.sh-topbar__week {
-  font-size: var(--sh-size-lg);
+.sh-header__eyebrow {
+  display: block;
+  font-size: var(--sh-size-2xs);
   font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-header__title {
+  margin: var(--sh-space-1) 0 0;
+  font-size: var(--sh-size-xl);
+  font-weight: var(--sh-weight-bold);
   letter-spacing: var(--sh-tracking-tight);
   line-height: var(--sh-leading-tight);
 }
 
-.sh-topbar__actions {
+.sh-header__actions {
   display: flex;
-  gap: var(--sh-space-1);
-}
-
-/* Chip: selettore del tipo di settimana e pulsanti icona della barra */
-.sh-chip {
-  display: inline-flex;
-  align-items: center;
   gap: var(--sh-space-2);
-  min-height: var(--sh-touch-min);
-  padding: 0 var(--sh-space-4);
-  border-radius: var(--sh-radius-pill);
-  background: var(--sh-primary-tint);
-  color: var(--sh-primary);
-  font-size: var(--sh-size-sm);
-  font-weight: var(--sh-weight-semibold);
-  white-space: nowrap;
+  flex: none;
 }
-
-.sh-chip:active { background: var(--sh-primary-tint-strong); }
 
 .sh-iconbtn {
   display: inline-flex;
@@ -130,74 +120,181 @@ button {
   width: var(--sh-touch-min);
   height: var(--sh-touch-min);
   border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
   color: var(--sh-text-muted);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
 }
 
-.sh-iconbtn:active { background: var(--sh-surface); }
+.sh-iconbtn:active { background: var(--sh-surface-strong); }
 
-/* ── 3. Riga del giorno ───────────────────────────────────────────── */
+.sh-iconbtn--plain { background: none; }
+
+/* ── 3. Blocco riepilogo ──────────────────────────────────────────── */
+
+.sh-hero {
+  position: relative;
+  padding: var(--sh-space-5) var(--sh-space-6);
+  border-radius: var(--sh-radius-lg);
+  background: linear-gradient(140deg, var(--sh-hero-from), var(--sh-hero-to));
+  color: var(--sh-on-hero);
+  box-shadow: var(--sh-shadow-hero);
+}
+
+.sh-hero__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  margin-bottom: var(--sh-space-4);
+}
+
+.sh-hero__label {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-on-hero-muted);
+}
+
+/* Selettore del tipo di settimana: sta nel blocco, non ruba una riga */
+.sh-typepill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  height: 36px;
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: hsl(0 0% 100% / 0.16);
+  color: var(--sh-on-hero);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+}
+
+.sh-typepill:active { background: hsl(0 0% 100% / 0.26); }
+
+.sh-hero__total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sh-space-2);
+  font-size: var(--sh-size-3xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tighter);
+  line-height: var(--sh-leading-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-hero__unit {
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: normal;
+  color: var(--sh-on-hero-muted);
+}
+
+.sh-hero__meta {
+  margin-top: var(--sh-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  font-size: var(--sh-size-sm);
+  color: var(--sh-on-hero-muted);
+}
+
+.sh-hero__pay {
+  color: var(--sh-on-hero);
+  font-weight: var(--sh-weight-semibold);
+}
+
+/* ── 4. Riga del giorno ───────────────────────────────────────────── */
+
+.sh-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+}
 
 .sh-day {
-  border: 1px solid var(--sh-border);
   border-radius: var(--sh-radius-md);
-  background: var(--sh-bg);
-  transition: border-color var(--sh-motion-fast) var(--sh-motion-ease);
+  background: var(--sh-surface);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
 }
 
-.sh-day--filled {
-  border-color: var(--sh-primary-tint-strong);
-  background: var(--sh-bg);
-}
-
-.sh-day--today { border-color: var(--sh-primary); }
+.sh-day--filled { background: var(--sh-primary-soft); }
 
 .sh-day--open {
-  border-color: var(--sh-primary);
+  background: var(--sh-bg);
   box-shadow: var(--sh-shadow-md);
+  border-radius: var(--sh-radius-lg);
 }
 
-/* Riga sempre visibile: nome, orari, ore, ✕ */
 .sh-day__head {
   display: flex;
   align-items: center;
   gap: var(--sh-space-3);
   width: 100%;
-  min-height: 60px;
-  padding: var(--sh-space-2) var(--sh-space-2) var(--sh-space-2) var(--sh-space-4);
+  min-height: var(--sh-row-height);
+  padding-inline: var(--sh-space-5) var(--sh-space-3);
   text-align: left;
 }
 
 .sh-day__name {
-  font-size: var(--sh-size-lg);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--sh-size-md);
   font-weight: var(--sh-weight-semibold);
   letter-spacing: var(--sh-tracking-tight);
-  min-width: 5.5em;
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-day:not(.sh-day--filled) .sh-day__name { color: var(--sh-text-muted); }
+
+/* Pallino del giorno di oggi */
+.sh-day__today {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary);
+  flex: none;
 }
 
 .sh-day__value {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: var(--sh-leading-snug);
+}
+
+.sh-day__hours {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-bold);
+  color: var(--sh-primary-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--sh-tracking-tight);
 }
 
 .sh-day__times {
-  font-family: var(--sh-font-numeric);
-  font-size: var(--sh-size-md);
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.sh-day__hours {
-  font-size: var(--sh-size-sm);
-  color: var(--sh-text-muted);
-}
-
-.sh-day__empty {
-  flex: 1;
-  font-size: var(--sh-size-md);
-  color: var(--sh-text-muted);
+/* Giorno vuoto: un + invita al tocco, nessuna scritta tecnica */
+.sh-day__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-medium);
 }
 
 /* La ✕ compare solo sui giorni impostati */
@@ -205,28 +302,26 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: none;
   width: var(--sh-touch-min);
   height: var(--sh-touch-min);
+  flex: none;
   border-radius: var(--sh-radius-pill);
-  color: var(--sh-text-muted);
-  font-size: var(--sh-size-lg);
+  color: var(--sh-primary-ink);
+  opacity: 0.55;
 }
 
 .sh-day__clear:active {
-  background: var(--sh-danger-tint);
+  opacity: 1;
+  background: var(--sh-danger-soft);
   color: var(--sh-danger);
 }
 
 /* Corpo che si apre dentro la riga: nessun cambio di schermata */
 .sh-day__panel {
-  padding: 0 var(--sh-space-4) var(--sh-space-4);
-  border-top: 1px solid var(--sh-border);
-  margin-top: var(--sh-space-1);
-  padding-top: var(--sh-space-4);
+  padding: var(--sh-space-2) var(--sh-space-5) var(--sh-space-5);
 }
 
-/* ── 4. Slider orario ─────────────────────────────────────────────── */
+/* ── 5. Slider orario ─────────────────────────────────────────────── */
 
 .sh-range {
   display: flex;
@@ -235,21 +330,25 @@ button {
 }
 
 .sh-range__readout {
-  text-align: center;
-  font-family: var(--sh-font-numeric);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sh-space-3);
   font-size: var(--sh-size-2xl);
-  font-weight: var(--sh-weight-semibold);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tighter);
   font-variant-numeric: tabular-nums;
-  letter-spacing: var(--sh-tracking-tight);
 }
 
+.sh-range__arrow { color: var(--sh-text-faint); font-weight: var(--sh-weight-regular); }
+
 .sh-range__duration {
-  display: block;
-  margin-top: var(--sh-space-1);
-  font-family: var(--sh-font);
+  text-align: center;
+  margin-top: calc(var(--sh-space-3) * -1);
   font-size: var(--sh-size-sm);
-  font-weight: var(--sh-weight-regular);
-  color: var(--sh-text-muted);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .sh-range__track {
@@ -262,16 +361,16 @@ button {
 .sh-range__rail {
   position: absolute;
   inset-inline: 0;
-  height: 8px;
+  height: var(--sh-rail-height);
   border-radius: var(--sh-radius-pill);
-  background: var(--sh-surface-sunken);
+  background: var(--sh-surface-strong);
 }
 
 .sh-range__fill {
   position: absolute;
-  height: 8px;
+  height: var(--sh-rail-height);
   border-radius: var(--sh-radius-pill);
-  background: var(--sh-primary);
+  background: linear-gradient(90deg, var(--sh-hero-from), var(--sh-hero-to));
 }
 
 .sh-range__handle {
@@ -291,14 +390,22 @@ button {
   height: var(--sh-handle-size);
   border-radius: var(--sh-radius-pill);
   background: var(--sh-bg);
-  border: 3px solid var(--sh-primary);
-  box-shadow: var(--sh-shadow-md);
+  box-shadow: 0 0 0 3px var(--sh-primary), var(--sh-shadow-md);
   transition: transform var(--sh-motion-fast) var(--sh-motion-ease);
 }
 
-.sh-range__handle:active::before { transform: scale(1.15); }
+.sh-range__handle:active::before { transform: scale(1.12); }
 
-/* Regolazione fine: due coppie − / +, una per l'inizio e una per la fine */
+.sh-range__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: calc(var(--sh-space-3) * -1);
+  font-size: var(--sh-size-2xs);
+  color: var(--sh-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Regolazione fine: due gruppi − / +, uno per l'inizio e uno per la fine */
 .sh-nudges {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -309,37 +416,38 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sh-space-2);
-  padding: var(--sh-space-2);
-  border-radius: var(--sh-radius-md);
+  gap: var(--sh-space-1);
+  padding: var(--sh-space-1);
+  border-radius: var(--sh-radius-pill);
   background: var(--sh-surface);
 }
 
 .sh-nudge__label {
-  font-size: var(--sh-size-xs);
+  font-size: var(--sh-size-2xs);
   font-weight: var(--sh-weight-semibold);
-  color: var(--sh-text-muted);
-  text-transform: uppercase;
   letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
 }
 
 .sh-nudge__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--sh-touch-min);
-  height: var(--sh-touch-min);
+  width: 40px;
+  height: 40px;
+  flex: none;
   border-radius: var(--sh-radius-pill);
   background: var(--sh-bg);
   color: var(--sh-primary);
   font-size: var(--sh-size-lg);
-  font-weight: var(--sh-weight-bold);
+  font-weight: var(--sh-weight-semibold);
   box-shadow: var(--sh-shadow-sm);
 }
 
-.sh-nudge__btn:active { background: var(--sh-primary-tint); }
+.sh-nudge__btn:active { background: var(--sh-primary-soft); }
 
-/* ── 5. Pulsanti ──────────────────────────────────────────────────── */
+/* ── 6. Pulsanti ──────────────────────────────────────────────────── */
 
 .sh-btn {
   display: inline-flex;
@@ -347,13 +455,15 @@ button {
   justify-content: center;
   gap: var(--sh-space-2);
   width: 100%;
-  min-height: 52px;
-  padding: 0 var(--sh-space-5);
+  min-height: 54px;
+  padding: 0 var(--sh-space-6);
   border-radius: var(--sh-radius-pill);
   background: var(--sh-primary);
-  color: var(--sh-text-on-primary);
+  color: var(--sh-on-primary);
   font-size: var(--sh-size-md);
   font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+  box-shadow: var(--sh-shadow-md);
   transition: background var(--sh-motion-fast) var(--sh-motion-ease);
 }
 
@@ -362,53 +472,79 @@ button {
 .sh-btn--secondary {
   background: var(--sh-surface);
   color: var(--sh-primary);
+  box-shadow: none;
 }
 
+.sh-btn--secondary:active { background: var(--sh-surface-strong); }
+
 .sh-btn--danger {
-  background: var(--sh-danger-tint);
+  background: var(--sh-danger-soft);
   color: var(--sh-danger);
+  box-shadow: none;
+}
+
+.sh-btn--ghost {
+  background: none;
+  color: var(--sh-text-muted);
+  box-shadow: none;
+  min-height: var(--sh-touch-min);
+  font-weight: var(--sh-weight-medium);
 }
 
 .sh-btn[disabled],
 .sh-btn--disabled {
   background: var(--sh-disabled-bg);
   color: var(--sh-disabled-text);
+  box-shadow: none;
   cursor: default;
 }
 
-.sh-btn--auto { width: auto; }
+/* ── 7. Barra d'azione in basso ───────────────────────────────────── */
 
-/* ── 6. Barra in basso ────────────────────────────────────────────── */
-
-.sh-bottombar {
+.sh-actionbar {
   display: flex;
-  align-items: center;
-  gap: var(--sh-space-3);
-  padding: var(--sh-space-3) var(--sh-space-4);
-  padding-bottom: max(var(--sh-space-3), env(safe-area-inset-bottom));
-  border-top: 1px solid var(--sh-border);
+  flex-direction: column;
+  gap: var(--sh-space-2);
+  padding: var(--sh-space-4) var(--sh-gutter);
+  padding-bottom: max(var(--sh-space-4), env(safe-area-inset-bottom));
   background: var(--sh-bg);
   box-shadow: var(--sh-shadow-bar);
 }
 
-.sh-total { flex: 1; min-width: 0; }
-
-.sh-total__hours {
-  font-size: var(--sh-size-xl);
-  font-weight: var(--sh-weight-bold);
-  letter-spacing: var(--sh-tracking-tight);
-  line-height: var(--sh-leading-tight);
-}
-
-/* Paga stimata: compare solo se lei ha inserito la paga oraria */
-.sh-total__pay {
-  font-size: var(--sh-size-sm);
+.sh-actionbar__hint {
+  text-align: center;
+  font-size: var(--sh-size-xs);
   color: var(--sh-text-muted);
 }
 
-.sh-bottombar .sh-btn { width: auto; flex: none; }
+/* ── 8. Anteprima del messaggio ───────────────────────────────────── */
 
-/* ── 7. Pannelli (storico, impostazioni) ──────────────────────────── */
+/* Fumetto: quello che legge è esattamente quello che incollerà */
+.sh-preview { display: flex; flex-direction: column; gap: var(--sh-space-2); }
+
+.sh-preview__label {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-preview__bubble {
+  margin: 0;
+  padding: var(--sh-space-4) var(--sh-space-5);
+  border-radius: var(--sh-radius-lg);
+  border-end-start-radius: var(--sh-radius-sm);
+  background: var(--sh-surface);
+  color: var(--sh-text);
+  font-family: var(--sh-font);
+  font-size: var(--sh-size-sm);
+  line-height: var(--sh-leading-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ── 9. Pannelli ──────────────────────────────────────────────────── */
 
 .sh-panel {
   display: grid;
@@ -418,161 +554,170 @@ button {
   min-height: 100dvh;
   margin-inline: auto;
   background: var(--sh-bg);
+  overflow: hidden;
 }
 
 .sh-panel__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sh-space-3);
-  padding: var(--sh-space-3) var(--sh-space-4);
-  padding-top: max(var(--sh-space-3), env(safe-area-inset-top));
-  border-bottom: 1px solid var(--sh-border);
+  gap: var(--sh-space-4);
+  padding: var(--sh-space-5) var(--sh-gutter) var(--sh-space-4);
+  padding-top: max(var(--sh-space-5), env(safe-area-inset-top));
 }
 
 .sh-panel__title {
-  font-size: var(--sh-size-lg);
-  font-weight: var(--sh-weight-semibold);
+  font-size: var(--sh-size-xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tight);
 }
 
 .sh-panel__body {
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--sh-space-4);
+  padding: 0 var(--sh-gutter) var(--sh-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--sh-space-3);
 }
 
-.sh-section__label {
-  font-size: var(--sh-size-xs);
+.sh-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+}
+
+.sh-group__label {
+  padding-inline-start: var(--sh-space-2);
+  font-size: var(--sh-size-2xs);
   font-weight: var(--sh-weight-semibold);
-  color: var(--sh-text-muted);
-  text-transform: uppercase;
   letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-group__note {
+  margin: 0;
+  padding-inline-start: var(--sh-space-2);
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
 }
 
 /* Riga dello storico */
 .sh-histrow {
   display: flex;
   align-items: center;
-  gap: var(--sh-space-3);
+  gap: var(--sh-space-4);
   width: 100%;
-  min-height: 64px;
-  padding: var(--sh-space-3) var(--sh-space-4);
-  border: 1px solid var(--sh-border);
+  padding: var(--sh-space-4) var(--sh-space-4) var(--sh-space-4) var(--sh-space-5);
   border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
   text-align: left;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
 }
+
+.sh-histrow:active { background: var(--sh-surface-strong); }
 
 .sh-histrow__main { flex: 1; min-width: 0; }
 
 .sh-histrow__week {
+  display: block;
   font-size: var(--sh-size-md);
   font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
 }
 
 .sh-histrow__meta {
-  font-size: var(--sh-size-sm);
+  display: block;
+  margin-top: 2px;
+  font-size: var(--sh-size-xs);
   color: var(--sh-text-muted);
 }
 
-.sh-histrow__chevron { color: var(--sh-text-muted); }
+.sh-histrow__hours {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-bold);
+  color: var(--sh-primary-ink);
+  font-variant-numeric: tabular-nums;
+}
 
-/* Campi delle impostazioni */
-.sh-field {
+.sh-histrow__chevron { color: var(--sh-text-faint); flex: none; }
+
+/* Righe delle impostazioni */
+.sh-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sh-space-3);
-  min-height: var(--sh-touch-min);
-  padding: var(--sh-space-3) var(--sh-space-4);
-  border: 1px solid var(--sh-border);
+  gap: var(--sh-space-4);
+  min-height: 60px;
+  padding: var(--sh-space-3) var(--sh-space-5);
   border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
 }
 
-.sh-field__label { font-size: var(--sh-size-md); }
+.sh-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sh-space-3);
+  padding-block: var(--sh-space-4);
+}
 
-.sh-field__input {
-  width: 7em;
-  padding: var(--sh-space-2) var(--sh-space-3);
-  border: 1px solid var(--sh-border-strong);
-  border-radius: var(--sh-radius-sm);
+.sh-row__label { font-size: var(--sh-size-md); font-weight: var(--sh-weight-medium); }
+
+.sh-row__value { font-size: var(--sh-size-sm); color: var(--sh-text-muted); }
+
+.sh-row__input {
+  width: 6.5em;
+  padding: var(--sh-space-2) var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
   background: var(--sh-bg);
   color: var(--sh-text);
-  font-family: var(--sh-font-numeric);
   font-size: var(--sh-size-md); /* mai sotto 16px: Safari zoomerebbe */
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
   text-align: end;
 }
 
-.sh-daypicker {
-  display: flex;
-  gap: var(--sh-space-2);
-  flex-wrap: wrap;
-}
+.sh-row__input::placeholder { color: var(--sh-text-faint); font-weight: var(--sh-weight-regular); }
+
+.sh-daypicker { display: flex; gap: var(--sh-space-2); }
 
 .sh-daypicker__day {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--sh-touch-min);
+  flex: 1;
   height: var(--sh-touch-min);
   border-radius: var(--sh-radius-pill);
-  border: 1px solid var(--sh-border-strong);
+  background: var(--sh-bg);
+  color: var(--sh-text-muted);
   font-size: var(--sh-size-sm);
   font-weight: var(--sh-weight-semibold);
-  color: var(--sh-text-muted);
 }
 
 .sh-daypicker__day[aria-pressed="true"] {
   background: var(--sh-primary);
-  border-color: var(--sh-primary);
-  color: var(--sh-text-on-primary);
+  color: var(--sh-on-primary);
 }
 
-/* Anteprima del messaggio: sta in fondo alla lista dei giorni, così quello che
-   legge è esattamente quello che copierà. */
-.sh-preview {
-  margin-top: var(--sh-space-3);
-  padding: var(--sh-space-4);
-  border-radius: var(--sh-radius-md);
-  background: var(--sh-surface);
-}
-
-.sh-preview__label {
-  display: block;
-  margin-bottom: var(--sh-space-2);
-  font-size: var(--sh-size-xs);
-  font-weight: var(--sh-weight-semibold);
-  color: var(--sh-text-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--sh-tracking-wide);
-}
-
-.sh-preview__text {
-  margin: 0;
-  font-family: var(--sh-font);
-  font-size: var(--sh-size-sm);
-  line-height: var(--sh-leading-normal);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-/* ── 8. Banner di notifica ────────────────────────────────────────── */
+/* ── 10. Banner di notifica ───────────────────────────────────────── */
 
 .sh-toast {
   display: flex;
   align-items: center;
   gap: var(--sh-space-3);
-  padding: var(--sh-space-3) var(--sh-space-4);
+  padding: var(--sh-space-4) var(--sh-space-5);
   border-radius: var(--sh-radius-md);
-  background: var(--sh-primary-tint);
-  color: var(--sh-primary);
+  background: var(--sh-text);
+  color: var(--sh-bg);
   font-size: var(--sh-size-sm);
   font-weight: var(--sh-weight-medium);
   box-shadow: var(--sh-shadow-md);
 }
 
-/* ── 9. Utilità ───────────────────────────────────────────────────── */
+.sh-toast__icon { color: var(--sh-hero-to); flex: none; }
+
+/* ── 11. Utilità ──────────────────────────────────────────────────── */
 
 .sh-hidden { display: none !important; }
 
