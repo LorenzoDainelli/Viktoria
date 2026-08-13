@@ -5,10 +5,26 @@
  * messaggio che lei manda al capo (vedi PIANO-FASE-1-v2.md, sezione 5).
  */
 
-export const MIN_TIME = 5 * 60;   // 05:00
-export const MAX_TIME = 24 * 60;  // 24:00
+/*
+ * Fascia normale dello slider. Più è stretta, più è facile centrare i 5 minuti
+ * col dito. Un turno già salvato fuori da questa fascia non viene mai tagliato:
+ * per quel giorno lo slider si allarga da solo (vedi boundsFor).
+ */
+export const MIN_TIME = 6 * 60;   // 06:00
+export const MAX_TIME = 20 * 60;  // 20:00
 export const STEP = 5;            // minuti
 export const MIN_SPAN = 5;        // durata minima di un turno
+
+/**
+ * Estremi da usare per un certo turno: quelli normali, allargati all'ora piena
+ * se il turno salvato esce dalla fascia. Serve a non perdere mai un orario già
+ * inserito, nemmeno se un domani la fascia cambia ancora.
+ */
+export function boundsFor(shift) {
+  const min = shift ? Math.min(MIN_TIME, Math.floor(shift.start / 60) * 60) : MIN_TIME;
+  const max = shift ? Math.max(MAX_TIME, Math.ceil(shift.end / 60) * 60) : MAX_TIME;
+  return { min, max };
+}
 
 /* 1 = lunedì … 7 = domenica */
 export const DAY_NAMES = [
@@ -72,8 +88,8 @@ export function formatDayMonthYear(date) {
 
 /* ── Orari e durate ───────────────────────────────────────────────── */
 
-export function snap(minutes) {
-  const clamped = Math.min(MAX_TIME, Math.max(MIN_TIME, minutes));
+export function snap(minutes, { min = MIN_TIME, max = MAX_TIME } = {}) {
+  const clamped = Math.min(max, Math.max(min, minutes));
   return Math.round(clamped / STEP) * STEP;
 }
 

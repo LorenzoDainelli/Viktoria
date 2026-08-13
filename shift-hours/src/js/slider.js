@@ -6,18 +6,17 @@
 
 import { MIN_TIME, MAX_TIME, STEP, MIN_SPAN, formatTime, formatHrs } from "./week.js";
 
-const RANGE = MAX_TIME - MIN_TIME;
-
-function clampStart(value, end) {
-  return Math.min(Math.max(value, MIN_TIME), end - MIN_SPAN);
-}
-
-function clampEnd(value, start) {
-  return Math.max(Math.min(value, MAX_TIME), start + MIN_SPAN);
-}
-
 function snapToStep(value) {
   return Math.round(value / STEP) * STEP;
+}
+
+/** Le ore da scrivere sotto la barra: né troppe né troppo poche. */
+function scaleHours(min, max) {
+  const hours = (max - min) / 60;
+  const every = hours <= 8 ? 1 : hours <= 16 ? 2 : 3;
+  const marks = [];
+  for (let h = Math.ceil(min / 60); h * 60 <= max; h += every) marks.push(h);
+  return marks;
 }
 
 /**
@@ -27,8 +26,19 @@ function snapToStep(value) {
  * @param {HTMLElement} container
  * @param {{start:number, end:number, onChange:Function, onCommit:Function}} options
  */
-export function createRangeSlider(container, { start, end, onChange, onCommit }) {
+export function createRangeSlider(container, {
+  start,
+  end,
+  min = MIN_TIME,
+  max = MAX_TIME,
+  onChange,
+  onCommit,
+}) {
   let current = { start, end };
+  const range = max - min;
+
+  const clampStart = (value) => Math.min(Math.max(value, min), current.end - MIN_SPAN);
+  const clampEnd = (value) => Math.max(Math.min(value, max), current.start + MIN_SPAN);
 
   container.innerHTML = `
     <div class="sh-range">
@@ -42,11 +52,15 @@ export function createRangeSlider(container, { start, end, onChange, onCommit })
         <div class="sh-range__rail"></div>
         <div class="sh-range__fill" data-role="fill"></div>
         <div class="sh-range__handle" data-handle="start" role="slider" tabindex="0"
-             aria-label="Start time" aria-valuemin="${MIN_TIME}" aria-valuemax="${MAX_TIME}"></div>
+             aria-label="Start time" aria-valuemin="${min}" aria-valuemax="${max}"></div>
         <div class="sh-range__handle" data-handle="end" role="slider" tabindex="0"
-             aria-label="End time" aria-valuemin="${MIN_TIME}" aria-valuemax="${MAX_TIME}"></div>
+             aria-label="End time" aria-valuemin="${min}" aria-valuemax="${max}"></div>
       </div>
-      <div class="sh-range__scale"><span>5</span><span>10</span><span>15</span><span>20</span><span>24</span></div>
+      <div class="sh-range__scale">
+        ${scaleHours(min, max)
+          .map((h) => `<span style="left: ${(((h * 60) - min) / range) * 100}%">${h}</span>`)
+          .join("")}
+      </div>
       <div class="sh-nudges">
         <div class="sh-nudge">
           <button class="sh-nudge__btn" type="button" data-nudge="start" data-delta="-1" aria-label="Start 5 minutes earlier">−</button>
@@ -73,7 +87,7 @@ export function createRangeSlider(container, { start, end, onChange, onCommit })
   };
 
   function percent(minutes) {
-    return ((minutes - MIN_TIME) / RANGE) * 100;
+    return ((minutes - min) / range) * 100;
   }
 
   function paint() {
@@ -94,8 +108,8 @@ export function createRangeSlider(container, { start, end, onChange, onCommit })
 
   function apply(which, value, { commit = false } = {}) {
     const next = which === "start"
-      ? { start: clampStart(value, current.end), end: current.end }
-      : { start: current.start, end: clampEnd(value, current.start) };
+      ? { start: clampStart(value), end: current.end }
+      : { start: current.start, end: clampEnd(value) };
 
     const changed = next.start !== current.start || next.end !== current.end;
     current = next;
@@ -107,7 +121,7 @@ export function createRangeSlider(container, { start, end, onChange, onCommit })
   function valueFromPointer(clientX) {
     const rect = track.getBoundingClientRect();
     const ratio = (clientX - rect.left) / rect.width;
-    return snapToStep(MIN_TIME + Math.min(1, Math.max(0, ratio)) * RANGE);
+    return snapToStep(min + Math.min(1, Math.max(0, ratio)) * range);
   }
 
   function startDrag(which, event) {
