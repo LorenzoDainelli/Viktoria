@@ -1,0 +1,63 @@
+# Pubblica l'app "Shift Hours" su GitHub Pages.
+#
+# Prende SOLO il contenuto di shift-hours/src e lo mette sulla root del branch
+# gh-pages, così l'indirizzo resta pulito (niente /shift-hours/src/ nell'URL).
+# Il resto del repo non viene pubblicato.
+#
+# Da fare una volta sola su GitHub: Settings → Pages → Source = "Deploy from a
+# branch", branch "gh-pages", cartella "/ (root)".
+
+name: Deploy Shift Hours
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "shift-hours/src/**"
+      - ".github/workflows/deploy-shift-hours.yml"
+  workflow_dispatch: # per ripubblicare a mano dalla scheda Actions
+
+permissions:
+  contents: write
+
+# Se arrivano due push ravvicinati, pubblica solo l'ultimo.
+concurrency:
+  group: deploy-shift-hours
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Marca la versione dell'app
+        # Il service worker riconosce una versione nuova dal numero di versione
+        # della cache. Lo si scrive qui con l'identificativo del commit, così
+        # nessuno può dimenticarsi di aggiornarlo a mano: senza questo, sul
+        # telefono resterebbe per sempre la versione vecchia.
+        run: |
+          set -euo pipefail
+          version="${GITHUB_SHA::7}"
+          file="shift-hours/src/service-worker.js"
+          sed -i -E "s|^const CACHE_VERSION = \".*\";|const CACHE_VERSION = \"$version\";|" "$file"
+          grep -q "const CACHE_VERSION = \"$version\";" "$file" \
+            || { echo "Versione non applicata: controllare $file"; exit 1; }
+
+      - name: Pubblica shift-hours/src sulla root di gh-pages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd shift-hours/src
+
+          # Senza .nojekyll, GitHub Pages passerebbe i file da Jekyll.
+          touch .nojekyll
+
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy da ${GITHUB_SHA::7}"
+          git push -q --force \
+            "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages

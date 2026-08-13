@@ -47,13 +47,25 @@ mai nessun dato reale**, paga oraria compresa: si inserisce dall'app.
 
 ## Come si aggiorna dopo che è installata sul telefono
 
-Un push su `main` che tocca `shift-hours/src/**` fa ripubblicare il sito. Alla
-successiva apertura **con connessione**, il service worker scarica la versione
-nuova e la applica alla riapertura dopo. Nessuna reinstallazione, i dati
-restano.
+Un push su `main` che tocca `shift-hours/src/**` fa ripubblicare il sito
+(workflow `.github/workflows/deploy-shift-hours.yml`). Alla successiva apertura
+**con connessione**, il service worker scarica la versione nuova e la applica
+alla riapertura dopo. Nessuna reinstallazione, i dati restano.
 
-Quando si modifica un file di `src/`, alzare `CACHE_VERSION` in
-`src/service-worker.js`: è il segnale che fa scaricare la versione nuova.
+Non serve toccare `CACHE_VERSION` in `src/service-worker.js`: al momento della
+pubblicazione il workflow ci scrive l'identificativo del commit. È l'unica
+differenza tra i file del repo e quelli pubblicati, e serve a evitare che una
+versione nuova non arrivi mai sul telefono perché qualcuno si è dimenticato di
+alzare quel numero a mano.
+
+### Prima pubblicazione
+
+Da fare una volta sola, su GitHub: **Settings → Pages → Source** = *Deploy from
+a branch*, branch **`gh-pages`**, cartella **`/ (root)`**. Il branch `gh-pages`
+viene creato dal workflow al primo deploy, quindi la voce compare solo dopo che
+il workflow è girato almeno una volta.
+
+Indirizzo finale: `https://<utente>.github.io/Viktoria/`
 
 ## Installarla sull'iPhone
 

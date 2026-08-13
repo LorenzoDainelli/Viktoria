@@ -3,11 +3,12 @@
  * Serve a due cose: far partire l'app anche senza connessione, e sostituirla
  * con la versione nuova quando ce n'è una, senza che lei debba fare niente.
  *
- * Quando si cambia un file di src/, alzare CACHE_VERSION: è il segnale che
- * fa scaricare la versione nuova.
+ * CACHE_VERSION non va aggiornata a mano: al momento della pubblicazione il
+ * workflow ci scrive l'identificativo del commit, così ogni versione nuova
+ * arriva davvero sul telefono. In locale resta "dev".
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "dev";
 const CACHE_NAME = `shifthours-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
