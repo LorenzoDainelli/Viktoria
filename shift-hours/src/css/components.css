@@ -406,13 +406,20 @@ button { cursor: pointer; touch-action: manipulation; }
 
 .sh-range__handle:active::before { transform: scale(1.12); }
 
+/* Le ore sotto la barra sono posizionate in percentuale, non distribuite:
+   devono cadere esattamente sopra il punto che indicano. */
 .sh-range__scale {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 1.2em;
   margin-top: calc(var(--sh-space-3) * -1);
   font-size: var(--sh-size-2xs);
   color: var(--sh-text-faint);
   font-variant-numeric: tabular-nums;
+}
+
+.sh-range__scale > span {
+  position: absolute;
+  transform: translateX(-50%);
 }
 
 /* Regolazione fine: due gruppi − / +, uno per l'inizio e uno per la fine */

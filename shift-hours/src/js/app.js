@@ -8,6 +8,7 @@
 import {
   DAY_INITIALS,
   DAY_NAMES,
+  boundsFor,
   formatDayMonth,
   formatDayMonthYear,
   formatDuration,
@@ -179,9 +180,15 @@ function mountSlider() {
   if (!panel) return;
   const shift = week.days[openDay];
 
+  // Se un turno già salvato esce dalla fascia normale, lo slider si allarga
+  // per quel giorno: un orario inserito non viene mai accorciato.
+  const bounds = boundsFor(shift);
+
   createRangeSlider(panel, {
     start: shift.start,
     end: shift.end,
+    min: bounds.min,
+    max: bounds.max,
     onChange: (start, end) => {
       week.days[openDay] = { start, end };
       const label = document.querySelector(`[data-hours="${openDay}"]`);

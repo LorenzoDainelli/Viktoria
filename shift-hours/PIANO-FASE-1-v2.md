@@ -150,7 +150,7 @@ sorgente di verità da cui si aggiorna.
 ## 4. Modello dati
 
 Tutti gli orari sono **minuti dalla mezzanotte**, multipli di 5. Range ammesso:
-300 (05:00) → 1440 (24:00).
+360 (06:00) → 1200 (20:00), allargabile in automatico quando serve (vedi Task 2).
 
 ```js
 // shifthours:settings
@@ -332,8 +332,12 @@ di passare al successivo.
 ### Task 2 — Slider orario
 - **File:** `src/js/slider.js`.
 - **Criteri:**
-  - Doppia maniglia trascinabile, range 05:00–24:00, scatto 5 minuti, mai
-    valori fuori scatto.
+  - Doppia maniglia trascinabile, range 06:00–20:00, scatto 5 minuti, mai
+    valori fuori scatto. La fascia è stretta apposta: più è corta la barra da
+    coprire, più è facile centrare i 5 minuti col dito su un telefono.
+  - **Un turno già salvato fuori dalla fascia non viene mai accorciato**: per
+    quel giorno la barra si allarga da sola fino a comprenderlo, arrotondando
+    all'ora piena. Vale anche se un domani la fascia cambia di nuovo.
   - Le maniglie non si scavalcano; durata minima 5 minuti.
   - Sotto lo slider, due coppie di pulsanti `−` / `+` (una per l'inizio, una per
     la fine) che spostano di 5 minuti per tocco.
@@ -457,7 +461,10 @@ solo a fine review.
 
 ## 8. Punti confermati con l'utente
 
-- Range slider 05:00–24:00: nessun turno oltre la mezzanotte, mai capitato.
+- Range slider 06:00–20:00, ristretto dopo la prova sul telefono: con la fascia
+  larga era difficile centrare i 5 minuti col dito. Nessun turno oltre la
+  mezzanotte, mai capitato; se dovesse servire un orario fuori fascia, la barra
+  si allarga da sola per quel giorno.
 - Turni sempre di diverse ore; il minimo tecnico di 5 minuti serve solo a
   impedire un turno da zero.
 - Nome dell'app: `WebApp for Shift Hours`, abbreviato in `Shift Hours` sotto
