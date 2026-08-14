@@ -27,7 +27,7 @@ import {
   workedDays,
 } from "./week.js";
 
-import { noteForWeek } from "./notes.js";
+import { displayWidth, noteForWeek } from "./notes.js";
 
 /**
  * @returns {string|null} il messaggio, o null se non ha lavorato nessun giorno
@@ -114,8 +114,10 @@ export function buildReceipt(week, days) {
   return lines.join("\n");
 }
 
+/* Centra contando le caselle occupate, non i byte: con un'emoji dentro,
+ * `text.length` sbaglia in tutt'e due i versi e la frase uscirebbe storta. */
 function padCenter(text, width) {
-  const left = Math.max(0, Math.floor((width - text.length) / 2));
+  const left = Math.max(0, Math.floor((width - displayWidth(text)) / 2));
   return " ".repeat(left) + text;
 }
 

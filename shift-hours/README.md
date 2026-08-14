@@ -60,6 +60,25 @@ Due telefoni sono due mondi separati: la stessa app aperta su due dispositivi
 non condivide niente. La settimana in corso è calcolata dall'orologio locale,
 quindi funziona anche in fusi diversi.
 
+## La frase della settimana
+
+In fondo allo scontrino, staccata dal totale e centrata, compare una frase
+presa da `NOTES` in `src/js/notes.js`. Cambia ogni settimana e resta la
+stessa per tutta la settimana; le frasi si susseguono in ordine e poi si
+ricomincia, così escono tutte e non se ne ripete mai una due settimane di
+fila. Con l'elenco vuoto lo scontrino finisce con il totale, come se la
+riga non esistesse.
+
+**Non entra nel messaggio che va al capo.** Vive solo dentro
+`buildReceipt()`; `buildSummary()` non la conosce.
+
+Il limite è **35 caselle**, che è la larghezza dello scontrino. Attenzione
+che non è la lunghezza del testo: nel carattere a spaziatura fissa
+**un'emoji occupa due caselle** (misurate 2,07). Il conto lo fa
+`displayWidth()`, che vale 2 per le emoji, 1 per le lettere e 0 per i pezzi
+invisibili delle emoji composte. Una frase che sfora viene semplicemente
+saltata, non tronca lo scontrino.
+
 ## La paga oraria cambia nel tempo
 
 La paga non è più un numero solo: è un **elenco**, e ognuna porta il giorno da
