@@ -38,6 +38,16 @@
   --sh-danger: #cc2b1d;         /* 5.4:1 su bianco */
   --sh-danger-soft: #fdeceb;
 
+  /* Arancione — solo per l'avviso della copia di sicurezza (Fase 2).
+     Non è un errore e non è un'azione distruttiva: è l'unica cosa che tiene
+     in vita le sue ore, quindi ha un colore suo e non condivide col rosso. */
+  --sh-warn: #a34a00;           /* 5.9:1 su bianco, 5.9:1 col bianco sopra */
+  --sh-warn-pressed: #843c00;
+  --sh-warn-soft: #fff3e3;      /* sfondo dell'avviso */
+  --sh-warn-ink: #7a3d00;       /* 7.7:1 su --sh-warn-soft */
+  --sh-warn-ink-muted: #8c5620; /* 5.5:1 su --sh-warn-soft */
+  --sh-on-warn: #ffffff;        /* 5.9:1 su --sh-warn */
+
   /* Elementi spenti */
   --sh-disabled-bg: #eceff7;
   --sh-disabled-text: #8b93a8;

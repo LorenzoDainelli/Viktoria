@@ -95,6 +95,14 @@
       <div class="swatch__meta"><div class="swatch__name">--sh-danger</div><div class="swatch__val">#CC2B1D · solo eliminare</div></div>
     </div>
     <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-warn)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-warn</div><div class="swatch__val">#A34A00 · 5.9:1 · copia di sicurezza</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch__chip" style="background: var(--sh-warn-soft)"></div>
+      <div class="swatch__meta"><div class="swatch__name">--sh-warn-soft</div><div class="swatch__val">#FFF3E3 · sfondo dell'avviso</div></div>
+    </div>
+    <div class="swatch">
       <div class="swatch__chip" style="background: var(--sh-disabled-bg)"></div>
       <div class="swatch__meta"><div class="swatch__name">--sh-disabled-bg</div><div class="swatch__val">#ECEFF7 · spento</div></div>
     </div>
@@ -152,6 +160,38 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Avviso della copia di sicurezza (Fase 2) — niente ✕: se ne va solo a salvataggio riuscito</div>
+      <div class="sh-alert">
+        <div class="sh-alert__text">
+          <span class="sh-alert__title">Back up August</span>
+          <span class="sh-alert__note">Keep a copy of your hours on your phone.</span>
+        </div>
+        <button class="sh-alert__btn" type="button" aria-label="Back up August">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Riga di stato nelle impostazioni — con e senza copia</div>
+      <div class="sh-group">
+        <span class="sh-group__label">Your hours</span>
+        <p class="sh-group__note">Last backup: August26 — 2 September</p>
+      </div>
+      <div class="sh-group">
+        <span class="sh-group__label">Your hours</span>
+        <p class="sh-group__note sh-group__note--warn">No backup yet</p>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Conferma prima di ripristinare (compare dal basso) — dice sempre cosa sta per rimettere dentro</div>
+      <p class="sh-sheet__title">This backup ends on 30 August and has 14 weeks. Restore it?</p>
+      <button class="sh-btn" type="button">Restore</button>
+      <button class="sh-btn sh-btn--ghost" type="button">Cancel</button>
     </div>
 
     <div class="specimen">
@@ -332,6 +372,18 @@
                 </button>
               </div>
 
+            </div>
+
+            <!-- Fase 2: sta qui, fra i giorni e l'anteprima, sulla strada che
+                 lei percorre ogni domenica per copiare le ore. -->
+            <div class="sh-alert">
+              <div class="sh-alert__text">
+                <span class="sh-alert__title">Back up August</span>
+                <span class="sh-alert__note">Keep a copy of your hours on your phone.</span>
+              </div>
+              <button class="sh-alert__btn" type="button" aria-label="Back up August">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>
+              </button>
             </div>
 
             <div class="sh-preview">
@@ -606,7 +658,8 @@ Saturday: 8:30 - 17:00 8.30 hrs
             <div class="sh-group">
               <span class="sh-group__label">Your hours</span>
               <button class="sh-btn sh-btn--secondary" type="button">Download backup</button>
-              <p class="sh-group__note">A copy of every week, saved to your phone.</p>
+              <button class="sh-btn sh-btn--secondary" type="button">Restore from backup</button>
+              <p class="sh-group__note">Last backup: August26 — 2 September</p>
             </div>
 
           </div>
