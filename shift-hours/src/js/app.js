@@ -53,7 +53,7 @@ import {
 import { pendingBackup } from "./backup.js";
 
 import { createRangeSlider } from "./slider.js";
-import { buildSummary, copyText } from "./summary.js";
+import { buildReceipt, buildSummary, copyText } from "./summary.js";
 
 /* Turno proposto quando apre un giorno nuovo: si sposta subito con lo slider. */
 const DEFAULT_SHIFT = { start: 9 * 60, end: 17 * 60 };
@@ -225,9 +225,12 @@ function renderTotals() {
     el("pay-line").hidden = true;
   }
 
+  // Due testi diversi di proposito: lo scontrino si guarda, il messaggio si
+  // copia. Al capo arriva sempre e solo `summary`.
   const summary = buildSummary(week, type.days);
-  el("preview").hidden = summary === null;
-  if (summary) el("preview-text").textContent = summary;
+  const receipt = buildReceipt(week, type.days);
+  el("preview").hidden = receipt === null;
+  if (receipt) el("preview-text").textContent = receipt;
   el("copy").disabled = summary === null;
 
   el("clear-week").hidden = Boolean(viewing) || summary === null;
