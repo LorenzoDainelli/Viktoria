@@ -29,7 +29,14 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Su iPhone un tocco lento su qualunque cosa toccabile fa comparire un
+     rettangolo grigio scuro: iOS lo disegna dopo circa un decimo di secondo,
+     per questo con un tocco rapido non si vedeva. Va spento su tutto, non
+     solo sui bottoni, perché le maniglie dello slider sono <div>. */
+  -webkit-tap-highlight-color: transparent;
+}
 
 body {
   margin: 0;
@@ -46,7 +53,6 @@ button, input {
   color: inherit;
   background: none;
   border: 0;
-  -webkit-tap-highlight-color: transparent;
 }
 
 button { cursor: pointer; touch-action: manipulation; }
@@ -337,6 +343,12 @@ button { cursor: pointer; touch-action: manipulation; }
   display: flex;
   flex-direction: column;
   gap: var(--sh-space-4);
+  /* Tenendo premuta una maniglia, iOS proverebbe a selezionare gli orari
+     scritti sopra (alone scuro + lente d'ingrandimento). Qui non c'è niente
+     da copiare: il messaggio si seleziona nella sua schermata. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .sh-range__readout {
