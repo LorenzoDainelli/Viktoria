@@ -18,9 +18,22 @@ const KEY_BACKUP = "shifthours:backup";
 export const BACKUP_VERSION = 2;
 
 export const FIXED_TYPES = [
-  { id: "week", name: "Week", days: [1, 2, 3, 4, 5, 6, 7], fixed: true },
+  { id: "week", name: "Full Week", days: [1, 2, 3, 4, 5, 6, 7], fixed: true },
   { id: "weekend", name: "Weekend", days: [6, 7], fixed: true },
 ];
+
+/**
+ * Il nome da mostrare per un tipo salvato dentro una settimana.
+ *
+ * I tipi fissi non si possono cancellare, quindi il loro nome attuale vince
+ * sempre: se no una settimana archiviata prima della Fase 3 direbbe "Week" e
+ * quella di questa settimana "Full Week", nello stesso elenco.
+ * Per i tipi personalizzati vale il nome salvato nella settimana, che è
+ * l'unico rimasto quando quel tipo è stato eliminato.
+ */
+export function displayTypeName(typeId, storedName) {
+  return FIXED_TYPES.find((t) => t.id === typeId)?.name ?? storedName;
+}
 
 export const MAX_CUSTOM_TYPES = 3;
 export const MAX_TYPE_NAME = 20;

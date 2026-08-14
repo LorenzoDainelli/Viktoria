@@ -138,6 +138,39 @@ button { cursor: pointer; touch-action: manipulation; }
 
 .sh-iconbtn--plain { background: none; }
 
+/* Torna alla settimana in corso. Compare nella testata solo mentre lei sta
+   guardando una settimana passata — e in quel momento è da sola, perché
+   l'app nasconde storico e impostazioni (app.js: `hidden = Boolean(viewing)`).
+   Ha la forma a pillola degli altri elementi della testata e la stessa
+   altezza dei pulsanti tondi, ma porta il colore dell'azione invece del
+   grigio: è una via d'uscita, non un attrezzo in più.
+ *
+ * Porta le parole scritte, non solo la freccia: chi la usa non è tecnica, e
+ * una freccia da sola in una testata non dice dove porta. Ci sta: il titolo
+ * più lungo («26 September») vuole 179px, i margini 56px, questa pillola
+ * 126px — in tutto 361px sui 393px dell'iPhone 15. */
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  height: var(--sh-touch-min);
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-primary);          /* 7.0:1 su --sh-surface */
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-chip:active { background: var(--sh-surface-strong); }
+
+/* Il blocco della data cede spazio invece di spingere i pulsanti fuori dallo
+   schermo: senza questo, un titolo lungo li taglia via al bordo destro. */
+.sh-header > :first-child { min-width: 0; }
+
 /* ── 3. Blocco riepilogo ──────────────────────────────────────────── */
 
 .sh-hero {

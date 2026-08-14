@@ -464,16 +464,33 @@ completa e usabile, e si può decidere di fermarsi lì.
   - Le quattro schermate intere si aprono a 390px senza scorrimento orizzontale.
   - Dati inventati.
 
-#### Task 1 — `sh-chip`
+#### Task 1 — `sh-chip`, e i nomi dei tipi di settimana
 - **File:** `design_handoff/components.css`, `design_handoff/reference.html`,
-  `src/css/components.css`.
+  `src/css/components.css`, `src/index.html`, `src/js/storage.js`,
+  `src/js/app.js`.
 - **Criteri:**
-  - Il pulsante `This week` ha forma, colore e peso coerenti con la testata.
+  - Il pulsante `This week` ha forma, colore e peso coerenti con la testata, e
+    **porta le parole scritte**: chi lo usa non è tecnica, e una freccia da sola
+    non dice dove porta.
   - Area di tocco ≥ 44×44.
   - Contrasto AA verificato e annotato.
-  - Con un titolo lungo (`Week ending 26 September`) la testata non va a capo e
-    non scorre in orizzontale a 390px.
+  - Con il titolo più lungo (`26 September`) la testata **non va a capo** e non
+    scorre in orizzontale a 393px, verificato sull'app vera nello stato in cui
+    la pillola compare davvero.
   - `design_handoff/` e `src/css/` restano identici.
+- **Aggiunte chieste dall'utente durante il task:**
+  - Il tipo fisso `Week` si chiama **`Full Week`**.
+  - Con tutti e sette i giorni selezionati l'elenco diventa **`Mon to Sun`**
+    invece di `Mon · Tue · Wed · Thu · Fri · Sat · Sun`, che andava a capo e non
+    diceva niente di più.
+  - Una settimana archiviata prima di questo cambio deve mostrare **il nome
+    nuovo**: i tipi fissi non si possono cancellare, quindi il loro nome
+    attuale vince sempre su quello salvato dentro la settimana. Per i tipi
+    personalizzati continua a valere il nome salvato, che è l'unico rimasto
+    quando quel tipo è stato eliminato.
+- **Nota sul perimetro:** questo task tocca anche `src/index.html` e `src/js/`,
+  cosa che il piano non prevedeva. Il motivo è la richiesta dell'utente sui
+  nomi dei tipi, che vive nel codice e non nel CSS.
 
 #### Task 2 — `Your week` e lo scontrino
 - **File:** `design_handoff/tokens/typography.css`, `design_handoff/components.css`,

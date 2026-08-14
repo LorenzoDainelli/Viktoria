@@ -24,6 +24,7 @@ import {
 } from "./week.js";
 
 import {
+  FIXED_TYPES,
   MAX_CUSTOM_TYPES,
   MAX_TYPE_NAME,
   allTypes,
@@ -31,6 +32,7 @@ import {
   applyBackup,
   currentWeekStart,
   deleteHistoryWeek,
+  displayTypeName,
   exportAll,
   exportUntil,
   findHistoryWeek,
@@ -296,7 +298,11 @@ function openPastWeek(weekStartISO) {
 
   viewing = weekStartISO;
   week = entry;
-  type = { id: entry.typeId, name: entry.typeName, days: daysOfWeek(entry) };
+  type = {
+    id: entry.typeId,
+    name: displayTypeName(entry.typeId, entry.typeName),
+    days: daysOfWeek(entry),
+  };
   openDay = null;
 
   el("history-layer").hidden = true;
@@ -357,6 +363,9 @@ function deleteWeek() {
 /* ── Tipo di settimana ────────────────────────────────────────────── */
 
 function daysLabel(days) {
+  // Tutti e sette: l'elenco puntato andrebbe a capo e non direbbe niente di
+  // più di "dal lunedì alla domenica".
+  if (days.length === 7) return "Mon to Sun";
   return [...days].sort((a, b) => a - b).map((d) => DAY_NAMES[d - 1].slice(0, 3)).join(" · ");
 }
 
@@ -441,7 +450,8 @@ function renderTypeSettings() {
   el("add-type").hidden = left <= 0;
   el("type-note").textContent =
     left > 0
-      ? `Week and Weekend are always there. You can add ${left} more of your own.`
+      ? `${FIXED_TYPES.map((t) => t.name).join(" and ")} are always there.` +
+        ` You can add ${left} more of your own.`
       : "You have all three of your own week types.";
 }
 
