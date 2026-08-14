@@ -81,6 +81,19 @@ sh-sheet__option sh-sheet__title sh-toast sh-toast--leaving sh-toast__icon
 sh-toasts sh-typename sh-typepill
 ```
 
+### Su che ramo lavorare
+
+Lavora su un ramo tuo, per esempio `claude/design-shift-hours`.
+
+**Non fare merge su `main` e non chiedere che venga fatto.** Un push su `main`
+che tocca `shift-hours/src/**` fa partire da solo la pubblicazione su GitHub
+Pages: la grafica nuova arriverebbe sul telefono di Viktoria nel giro di dieci
+secondi, senza che nessuno l'abbia vista. Il merge lo decide Lorenzo, dopo la
+revisione.
+
+Se serve tornare indietro, la versione attualmente in uso è sul ramo
+`backup-shift-hours-v1.2`.
+
 ## 4. Quattro regole CSS che sembrano estetiche e non lo sono
 
 Se riscrivi `components.css` da zero, **queste vanno riportate**. Sono
@@ -147,6 +160,7 @@ nuovo.
 - [ ] Ogni bersaglio di tocco è ≥ 44×44.
 - [ ] Contrasti AA verificati e annotati.
 - [ ] Provata sull'iPhone dalla schermata home, non solo nel browser.
+- [ ] Il lavoro è su un ramo tuo e **non** è stato fatto merge su `main`.
 
 ## 8. Lavoro separato: le icone
 
