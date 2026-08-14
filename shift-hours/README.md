@@ -16,8 +16,12 @@ I file che stanno nel repo sono esattamente quelli che girano sul telefono.
 design_handoff/     sorgente del sistema visivo (token + componenti + reference.html)
 src/                l'app vera e propria, l'unica cartella che viene pubblicata
   css/tokens/       copia dei token: si aggiorna copiandola da design_handoff/
-  js/               week.js (date e formati), storage.js, slider.js, summary.js, app.js
+  js/               week.js (date e formati), storage.js, slider.js, summary.js,
+                    backup.js, holidays.js, rates.js, calendar.js, app.js
 ```
+
+> Un file `.js` nuovo va aggiunto anche a `CORE_ASSETS` in
+> `src/service-worker.js`, se no l'app non parte quando è offline.
 
 I file di `src/css/tokens/` e `src/css/components.css` **sono copie**: si
 modificano in `design_handoff/` e si ricopiano, perché `src/` deve poter essere
@@ -40,6 +44,12 @@ python3 -m http.server 8000 --directory src
 
 ## Dove vivono i dati
 
+Il riquadro sotto i giorni, `Your week`, mostra le ore **incolonnate come uno
+scontrino**. Non è il messaggio: quello che `Copy summary` mette negli appunti
+è il testo di sempre, riga per riga. Sono due funzioni separate apposta —
+le colonne allineate reggono solo in un font a spaziatura fissa, e WhatsApp
+scrive con un font proporzionale, dove si sfaserebbero.
+
 Solo sul dispositivo, in `localStorage`, sotto quattro chiavi:
 `shifthours:current-week`, `shifthours:history`, `shifthours:settings`,
 `shifthours:backup`. Nessun server, nessun account, nessuna sincronizzazione.
@@ -49,6 +59,62 @@ inserisce dall'app.
 Due telefoni sono due mondi separati: la stessa app aperta su due dispositivi
 non condivide niente. La settimana in corso è calcolata dall'orologio locale,
 quindi funziona anche in fusi diversi.
+
+## La paga oraria cambia nel tempo
+
+La paga non è più un numero solo: è un **elenco**, e ognuna porta il giorno da
+cui vale.
+
+- La **prima** vale dall'inizio dei tempi, anche per le settimane inserite
+  prima di averla scritta.
+- Ogni paga nuova vale **dal giorno in cui la crea**; la precedente resta
+  valida fino al giorno prima. La data si può correggere dopo, perché il capo
+  non sempre avvisa in tempo.
+- Cancellandone una, il periodo che copriva torna a quella precedente.
+  Cancellando l'ultima rimasta, la stima sparisce.
+
+Per questo la stima non si calcola più sulle ore della settimana ma
+**sommando i giorni**: una settimana a cavallo di un aumento ha cinque giorni
+al prezzo vecchio e due al nuovo, e viene giusta.
+
+Ogni modifica chiede conferma dicendo cosa sta per succedere, coi numeri
+dentro. Nessuna finestra del browser.
+
+## Bank holiday
+
+L'app conosce le **dieci feste irlandesi** e le **calcola dalle regole** —
+primo lunedì di febbraio, lunedì di Pasqua, ultimo lunedì di ottobre e così
+via — mai da una lista scritta a mano, che scadrebbe e sbaglierebbe in
+silenzio.
+
+Un giorno di festa porta un **pallino giallo** a destra del nome, che compare
+anche se non ha lavorato: serve pure a saperlo in anticipo.
+
+Nel bar di Viktoria quei giorni sono pagati il **doppio**, e l'app ne tiene
+conto — ma **solo in `Estimated pay`**. Le ore restano quelle vere ovunque:
+nella riga del giorno, nel totale, nello scontrino e soprattutto nel messaggio
+al capo, che non cambia di un carattere.
+
+> Il doppio è la politica del suo bar, non un obbligo di legge: la legge
+> irlandese lascia al datore la scelta fra quattro forme di compenso. Se
+> cambiasse, si cambia `HOLIDAY_MULTIPLIER` in `src/js/holidays.js` e in
+> nessun altro posto.
+
+## Il calendario
+
+Terza icona nella testata. Un mese sotto l'altro, si scorre dal mese della
+prima settimana registrata fino a dodici mesi avanti.
+
+Ogni casella mostra il numero del giorno, il guadagno **arrotondato all'euro**
+(i centesimi restano solo in `Estimated pay`) e un fondo colorato in base a
+quanto ha reso quel giorno. La sfumatura si scala **sul mese che si sta
+guardando**, non su tutto lo storico: se no un turno eccezionale
+schiaccerebbe ogni altro mese in un grigio piatto per anni.
+
+I bank holiday hanno un anello giallo attorno al numero. Senza paga oraria
+non ci sono né colori né importi: restano i giorni e i festivi.
+
+**Il calendario non modifica niente.** Si guarda.
 
 ## Copie di sicurezza
 

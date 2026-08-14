@@ -23,6 +23,7 @@
  *  11. Banner di notifica
  *  12. Livelli, foglio di scelta, notifiche a comparsa
  *  13. Utilità
+ *  14. Calendario
  */
 
 /* ── 1. Reset e shell ─────────────────────────────────────────────── */
@@ -137,6 +138,39 @@ button { cursor: pointer; touch-action: manipulation; }
 .sh-iconbtn:active { background: var(--sh-surface-strong); }
 
 .sh-iconbtn--plain { background: none; }
+
+/* Torna alla settimana in corso. Compare nella testata solo mentre lei sta
+   guardando una settimana passata — e in quel momento è da sola, perché
+   l'app nasconde storico e impostazioni (app.js: `hidden = Boolean(viewing)`).
+   Ha la forma a pillola degli altri elementi della testata e la stessa
+   altezza dei pulsanti tondi, ma porta il colore dell'azione invece del
+   grigio: è una via d'uscita, non un attrezzo in più.
+ *
+ * Porta le parole scritte, non solo la freccia: chi la usa non è tecnica, e
+ * una freccia da sola in una testata non dice dove porta. Ci sta: il titolo
+ * più lungo («26 September») vuole 179px, i margini 56px, questa pillola
+ * 126px — in tutto 361px sui 393px dell'iPhone 15. */
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  height: var(--sh-touch-min);
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-primary);          /* 7.0:1 su --sh-surface */
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-chip:active { background: var(--sh-surface-strong); }
+
+/* Il blocco della data cede spazio invece di spingere i pulsanti fuori dallo
+   schermo: senza questo, un titolo lungo li taglia via al bordo destro. */
+.sh-header > :first-child { min-width: 0; }
 
 /* ── 3. Blocco riepilogo ──────────────────────────────────────────── */
 
@@ -272,6 +306,17 @@ button { cursor: pointer; touch-action: manipulation; }
   height: 7px;
   border-radius: var(--sh-radius-pill);
   background: var(--sh-primary);
+  flex: none;
+}
+
+/* Bank holiday: stesso pallino di oggi, giallo, ma a destra del nome invece
+   che a sinistra. Un giorno può averli entrambi. Compare anche nei giorni non
+   lavorati: serve a sapere in anticipo che lunedì prossimo è festa. */
+.sh-day__holiday {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-holiday);
   flex: none;
 }
 
@@ -622,18 +667,23 @@ button { cursor: pointer; touch-action: manipulation; }
   color: var(--sh-text-muted);
 }
 
+/* Lo scontrino. Le colonne che src/js/summary.js incolonna con gli spazi
+   reggono solo a spaziatura fissa: qui il monospazio non è un vezzo, è quello
+   che tiene in riga i numeri. A 14px i 35 caratteri stanno dentro un iPhone 15
+   senza scorrimento — `white-space: pre` e non `pre-wrap`, perché una riga
+   mandata a capo distruggerebbe l'incolonnamento. */
 .sh-preview__bubble {
   margin: 0;
   padding: var(--sh-space-4) var(--sh-space-5);
-  border-radius: var(--sh-radius-lg);
-  border-end-start-radius: var(--sh-radius-sm);
+  border-radius: var(--sh-radius-md);
   background: var(--sh-surface);
   color: var(--sh-text);
-  font-family: var(--sh-font);
-  font-size: var(--sh-size-sm);
+  font-family: var(--sh-mono);
+  font-size: var(--sh-size-mono);
   line-height: var(--sh-leading-normal);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 /* ── 10. Pannelli ──────────────────────────────────────────────────── */
@@ -772,6 +822,82 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 
 .sh-row__input::placeholder { color: var(--sh-text-faint); font-weight: var(--sh-weight-regular); }
+
+/* Il campo della paga oraria affiancato al simbolo di valuta */
+.sh-rate {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-rate__currency {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+}
+
+/* Nome modificabile di un tipo di settimana personalizzato */
+.sh-typename {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sh-space-2) var(--sh-space-3);
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-bg);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-medium);
+}
+
+/* Una paga dello storico: quanto, e da quando. La riga intera si tocca per
+   correggerla; la ✕ accanto la cancella. */
+.sh-raterow {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-raterow__edit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sh-touch-min);
+  padding: var(--sh-space-3) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  text-align: left;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-raterow__edit:active { background: var(--sh-surface-strong); }
+
+.sh-raterow__amount {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sh-raterow__from {
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Elenco vuoto: lo storico prima che ci sia dentro qualcosa */
+.sh-empty {
+  margin: 0;
+  padding: var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-sm);
+  text-align: center;
+}
 
 .sh-daypicker { display: flex; gap: var(--sh-space-2); }
 
@@ -955,3 +1081,95 @@ button { cursor: pointer; touch-action: manipulation; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ── 14. Calendario ───────────────────────────────────────────────── */
+
+/* Un mese sotto l'altro, si scorre in verticale. È in sola lettura: qui non
+   si modifica niente, si guarda com'è andato il mese. */
+.sh-cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-7);
+}
+
+.sh-cal__month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-3);
+}
+
+.sh-cal__title {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-cal__weekdays,
+.sh-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sh-space-1);
+}
+
+.sh-cal__weekdays {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-muted);
+  text-align: center;
+}
+
+/* La casella è quadrata: sette colonne dentro 393px fanno circa 47px, e in
+   47px ci stanno il numero e sotto l'importo piccolo. */
+.sh-cal__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 3px e non 1: l'anello giallo dei bank holiday sborda di 3px dal numero, e
+     con uno spazio più stretto andrebbe a toccare l'importo sotto. */
+  gap: 3px;
+  aspect-ratio: 1;
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-bg);
+  color: var(--sh-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Il giorno senza data: le celle vuote prima del primo e dopo l'ultimo. */
+.sh-cal__day--empty { background: none; }
+
+.sh-cal__num {
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  line-height: 1;
+}
+
+/* L'importo arrotondato all'euro: i centesimi restano solo in Estimated pay,
+   qui non ci starebbero e non servirebbero. */
+.sh-cal__pay {
+  font-size: var(--sh-size-2xs);
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* I sei gradini. Ognuno porta con sé il suo inchiostro: il contrasto è
+   deciso qui, non calcolato quando la pagina è già a schermo. */
+.sh-cal__day[data-heat="0"] { background: var(--sh-heat-0); color: var(--sh-heat-ink-0); }
+.sh-cal__day[data-heat="1"] { background: var(--sh-heat-1); color: var(--sh-heat-ink-1); }
+.sh-cal__day[data-heat="2"] { background: var(--sh-heat-2); color: var(--sh-heat-ink-2); }
+.sh-cal__day[data-heat="3"] { background: var(--sh-heat-3); color: var(--sh-heat-ink-3); }
+.sh-cal__day[data-heat="4"] { background: var(--sh-heat-4); color: var(--sh-heat-ink-4); }
+.sh-cal__day[data-heat="5"] { background: var(--sh-heat-5); color: var(--sh-heat-ink-5); }
+
+/* Bank holiday: l'anello attorno al numero, dello stesso giallo del pallino
+   della schermata settimana. */
+.sh-cal__day--holiday .sh-cal__num {
+  box-shadow: 0 0 0 2px var(--sh-holiday);
+  border-radius: var(--sh-radius-pill);
+  padding: 3px 4px;
+  margin: -3px -4px;
+}
+
+/* Oggi: lo stesso segno che porta nella lista dei giorni, un contorno blu. */
+.sh-cal__day--today { box-shadow: inset 0 0 0 2px var(--sh-primary); }

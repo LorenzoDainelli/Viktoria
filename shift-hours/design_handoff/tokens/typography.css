@@ -11,6 +11,11 @@
   --sh-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
              Roboto, "Helvetica Neue", Arial, sans-serif;
 
+  /* Solo per lo scontrino del riepilogo: le colonne allineate reggono soltanto
+     a spaziatura fissa. Su iPhone `ui-monospace` è SF Mono, già installato —
+     nessun file da scaricare, come per il font principale. */
+  --sh-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
   --sh-size-2xs: 0.6875rem;  /* 11px — solo occhielli maiuscoletti */
   --sh-size-xs: 0.8125rem;   /* 13px */
   --sh-size-sm: 0.9375rem;   /* 15px */
@@ -19,6 +24,10 @@
   --sh-size-xl: 1.75rem;     /* 28px — titoli di schermata */
   --sh-size-2xl: 2.125rem;   /* 34px — orari nello slider aperto */
   --sh-size-3xl: 2.75rem;    /* 44px — totale della settimana */
+
+  /* 14px: la misura più grande a cui i 35 caratteri dello scontrino stanno
+     nel riquadro a 393px senza scorrimento orizzontale. Misurata, non scelta. */
+  --sh-size-mono: 0.875rem;
 
   --sh-weight-regular: 400;
   --sh-weight-medium: 500;

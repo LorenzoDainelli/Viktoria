@@ -9,6 +9,7 @@ import {
   DAY_INITIALS,
   DAY_NAMES,
   boundsFor,
+  dateOfDay,
   formatDayMonth,
   formatDayMonthYear,
   formatDuration,
@@ -24,6 +25,7 @@ import {
 } from "./week.js";
 
 import {
+  FIXED_TYPES,
   MAX_CUSTOM_TYPES,
   MAX_TYPE_NAME,
   allTypes,
@@ -31,6 +33,7 @@ import {
   applyBackup,
   currentWeekStart,
   deleteHistoryWeek,
+  displayTypeName,
   exportAll,
   exportUntil,
   findHistoryWeek,
@@ -49,9 +52,30 @@ import {
 } from "./storage.js";
 
 import { pendingBackup } from "./backup.js";
+import { holidayName } from "./holidays.js";
+
+import {
+  monthGrid,
+  monthOf,
+  monthRange,
+  monthTitle,
+  monthsBetween,
+  payByDay,
+} from "./calendar.js";
+
+import {
+  formatMoney,
+  formatMoneyRounded,
+  rateOn,
+  validUntil,
+  weekPay,
+  withEditedRate,
+  withRate,
+  withoutRate,
+} from "./rates.js";
 
 import { createRangeSlider } from "./slider.js";
-import { buildSummary, copyText } from "./summary.js";
+import { buildReceipt, buildSummary, copyText } from "./summary.js";
 
 /* Turno proposto quando apre un giorno nuovo: si sposta subito con lo slider. */
 const DEFAULT_SHIFT = { start: 9 * 60, end: 17 * 60 };
@@ -64,6 +88,8 @@ let type;
 let viewing = null; // null = settimana corrente, altrimenti la data di una passata
 let openDay = null;
 let confirmAction = null;
+let addingRate = false;      // sta scrivendo una paga nuova
+let editingRate = null;      // indice della paga che sta correggendo
 
 /* ── Avvio ────────────────────────────────────────────────────────── */
 
@@ -131,6 +157,7 @@ function render() {
   // toggleAttribute e non .hidden: su un elemento SVG la proprietà non esiste.
   el("type-caret").toggleAttribute("hidden", Boolean(viewing));
   el("back-to-current").hidden = !viewing;
+  el("open-calendar").hidden = Boolean(viewing);
   el("open-history").hidden = Boolean(viewing);
   el("open-settings").hidden = Boolean(viewing);
 
@@ -149,6 +176,9 @@ function dayMarkup(day) {
   const shift = week.days[day];
   const isOpen = openDay === day;
   const isToday = isCurrentWeek() && todayNumber() === day;
+  // Il pallino giallo compare anche nei giorni non lavorati: serve pure a
+  // sapere in anticipo che lunedì prossimo è festa.
+  const holiday = holidayName(toISODate(dateOfDay(week.weekStart, day)));
 
   const classes = ["sh-day"];
   if (shift) classes.push("sh-day--filled");
@@ -176,6 +206,7 @@ function dayMarkup(day) {
         <span class="sh-day__name">
           ${isToday ? '<span class="sh-day__today" aria-hidden="true"></span>' : ""}
           ${DAY_NAMES[day - 1]}
+          ${holiday ? `<span class="sh-day__holiday" role="img" aria-label="${escapeHtml(holiday)}"></span>` : ""}
         </span>
         ${value}
       </button>
@@ -215,17 +246,19 @@ function renderTotals() {
   const total = totalMinutes(week, type.days);
   el("total-hours").textContent = formatDuration(total);
 
-  const rate = settings.hourlyRate;
-  if (rate) {
-    el("pay-value").textContent = `${((total / 60) * rate).toFixed(2)}€`;
-    el("pay-line").hidden = false;
-  } else {
-    el("pay-line").hidden = true;
-  }
+  // La somma dei giorni, non il totale delle ore per una paga sola: è l'unico
+  // modo perché una settimana a cavallo di un aumento — o con dentro un bank
+  // holiday, che vale il doppio — venga giusta.
+  const pay = weekPay(week, type.days, settings.rates);
+  el("pay-value").textContent = pay === null ? "" : formatMoney(pay);
+  el("pay-line").hidden = pay === null;
 
+  // Due testi diversi di proposito: lo scontrino si guarda, il messaggio si
+  // copia. Al capo arriva sempre e solo `summary`.
   const summary = buildSummary(week, type.days);
-  el("preview").hidden = summary === null;
-  if (summary) el("preview-text").textContent = summary;
+  const receipt = buildReceipt(week, type.days);
+  el("preview").hidden = receipt === null;
+  if (receipt) el("preview-text").textContent = receipt;
   el("copy").disabled = summary === null;
 
   el("clear-week").hidden = Boolean(viewing) || summary === null;
@@ -296,7 +329,11 @@ function openPastWeek(weekStartISO) {
 
   viewing = weekStartISO;
   week = entry;
-  type = { id: entry.typeId, name: entry.typeName, days: daysOfWeek(entry) };
+  type = {
+    id: entry.typeId,
+    name: displayTypeName(entry.typeId, entry.typeName),
+    days: daysOfWeek(entry),
+  };
   openDay = null;
 
   el("history-layer").hidden = true;
@@ -357,6 +394,9 @@ function deleteWeek() {
 /* ── Tipo di settimana ────────────────────────────────────────────── */
 
 function daysLabel(days) {
+  // Tutti e sette: l'elenco puntato andrebbe a capo e non direbbe niente di
+  // più di "dal lunedì alla domenica".
+  if (days.length === 7) return "Mon to Sun";
   return [...days].sort((a, b) => a - b).map((d) => DAY_NAMES[d - 1].slice(0, 3)).join(" · ");
 }
 
@@ -387,13 +427,221 @@ function chooseType(typeId) {
   render();
 }
 
+/* ── Calendario ───────────────────────────────────────────────────── */
+
+function openCalendar() {
+  const weeks = allWeeks();
+  const rates = settings.rates;
+  const byDay = payByDay(weeks, rates);
+  const { first, last } = monthRange(weeks);
+
+  el("calendar").innerHTML = monthsBetween(first, last).map((month) =>
+    monthMarkup(month, byDay)
+  ).join("");
+
+  el("calendar-note").textContent = rates.length
+    ? "Bank holidays are circled in yellow and count double."
+    : "Add your hourly rate to see what each day earned.";
+
+  el("calendar-layer").hidden = false;
+
+  // Si apre sul mese in corso, non sul primo del 2025: è quello che le
+  // interessa, e da lì scorre indietro quanto vuole.
+  const now = el("calendar").querySelector(`[data-month="${monthOf(toISODate(new Date()))}"]`);
+  if (now) now.scrollIntoView({ block: "start" });
+}
+
+function monthMarkup(month, byDay) {
+  const cells = monthGrid(month, byDay)
+    .map((cell) => {
+      if (!cell) return '<div class="sh-cal__day sh-cal__day--empty"></div>';
+
+      const classes = ["sh-cal__day"];
+      if (cell.holiday) classes.push("sh-cal__day--holiday");
+      if (cell.today) classes.push("sh-cal__day--today");
+
+      const label = [
+        formatDayMonth(fromISODate(cell.date)),
+        cell.holiday,
+        cell.pay ? `${formatMoneyRounded(cell.pay)} earned` : null,
+      ].filter(Boolean).join(", ");
+
+      return `
+        <div class="${classes.join(" ")}"${cell.heat === null ? "" : ` data-heat="${cell.heat}"`}
+             role="img" aria-label="${escapeHtml(label)}">
+          <span class="sh-cal__num">${cell.day}</span>
+          ${cell.pay ? `<span class="sh-cal__pay">${formatMoneyRounded(cell.pay)}</span>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <section class="sh-cal__month" data-month="${month}">
+      <h2 class="sh-cal__title">${monthTitle(month)}</h2>
+      <div class="sh-cal__weekdays" aria-hidden="true">
+        ${DAY_INITIALS.map((d) => `<span>${d}</span>`).join("")}
+      </div>
+      <div class="sh-cal__grid">${cells}</div>
+    </section>`;
+}
+
 /* ── Impostazioni ─────────────────────────────────────────────────── */
 
 function openSettings() {
-  el("hourly-rate").value = settings.hourlyRate ?? "";
+  renderRateSettings();
   renderTypeSettings();
   renderBackupStatus();
   el("settings-layer").hidden = false;
+}
+
+/* ── La paga oraria nel tempo ─────────────────────────────────────── */
+
+/**
+ * La prima paga non porta una data: vale dall'inizio, e scrivere "from
+ * 1 January 1970" non direbbe niente a nessuno. Le successive dicono da
+ * quando, e quelle finite dicono anche fino a quando.
+ */
+function rateWhen(rates, index) {
+  const until = validUntil(rates, index);
+  const end = until ? formatDayMonthYear(fromISODate(until)) : null;
+
+  if (index === 0) return end ? `Up to ${end}` : "From the start";
+
+  const from = formatDayMonthYear(fromISODate(rates[index].from));
+  return end ? `${from} – ${end}` : `From ${from}`;
+}
+
+function renderRateSettings() {
+  const rates = settings.rates;
+
+  el("rate-list").innerHTML = rates
+    .map(
+      (rate, i) => `
+      <div class="sh-raterow">
+        <button class="sh-raterow__edit" type="button" data-edit-rate="${i}">
+          <span class="sh-raterow__amount">${formatMoney(rate.amount)} an hour</span>
+          <span class="sh-raterow__from">${rateWhen(rates, i)}</span>
+        </button>
+        <button class="sh-iconbtn sh-iconbtn--plain" type="button" data-delete-rate="${i}"
+                aria-label="Delete ${formatMoney(rate.amount)} an hour">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>`
+    )
+    .join("");
+
+  // Con la lista vuota il campo è quello di sempre e resta in vista: la prima
+  // paga si inserisce senza dover prima capire cos'è uno storico.
+  const empty = rates.length === 0;
+  const open = empty || addingRate || editingRate !== null;
+
+  el("rate-new-row").hidden = !open;
+  el("add-rate").hidden = open;
+  el("rate-new-label").textContent =
+    editingRate !== null ? "Change this pay" : empty ? "Hourly rate" : "New pay from today";
+  el("hourly-rate").value = editingRate !== null ? String(rates[editingRate].amount) : "";
+
+  el("rate-note").textContent = empty
+    ? "Leave it empty to hide estimated pay."
+    : "A new pay only counts from the day you add it. Weeks before it keep the old one.";
+}
+
+/** Il campo torna a essere quello per una paga nuova. */
+function resetRateField() {
+  addingRate = false;
+  editingRate = null;
+  renderRateSettings();
+}
+
+/**
+ * Il campo è uno solo e fa due cose: se sta correggendo una paga la cambia,
+ * se no ne aggiunge una nuova da oggi. Nessuna finestra del browser: le
+ * conferme sono quelle dell'app, con i numeri dentro.
+ */
+function submitRateField(value) {
+  const amount = readRate(value);
+  if (amount === null) return resetRateField();
+
+  if (editingRate !== null) return applyRateEdit(editingRate, amount);
+  return applyNewRate(amount);
+}
+
+function applyNewRate(amount) {
+  const rates = settings.rates;
+  const from = toISODate(new Date());
+  const before = rateOn(rates, from);
+  const first = rates.length === 0;
+
+  const apply = () => {
+    settings.rates = withRate(rates, from, amount);
+    resetRateField();
+    saveSettings(settings);
+    renderTotals();
+    toast(first ? "Pay saved" : `Pay is now ${formatMoney(amount)} an hour`);
+  };
+
+  // La prima paga non toglie niente a nessuno: non c'è da confermare.
+  if (first) return apply();
+
+  askConfirm(
+    `From today your pay is ${formatMoney(amount)} an hour.` +
+      ` Weeks before today keep ${formatMoney(before)}.`,
+    "Save",
+    apply,
+    { danger: false }
+  );
+}
+
+function applyRateEdit(index, amount) {
+  const rate = settings.rates[index];
+  if (!rate || amount === rate.amount) return resetRateField();
+
+  const weeks = weeksPaidAt(settings.rates, index);
+  askConfirm(
+    `This pay changes from ${formatMoney(rate.amount)} to ${formatMoney(amount)}.` +
+      ` It affects ${weeks === 1 ? "1 week" : `${weeks} weeks`}.`,
+    "Save",
+    () => {
+      settings.rates = withEditedRate(settings.rates, index, rate.from, amount);
+      resetRateField();
+      saveSettings(settings);
+      renderTotals();
+      toast("Pay updated");
+    },
+    { danger: false }
+  );
+}
+
+function deleteRate(index) {
+  const rates = settings.rates;
+  const rate = rates[index];
+  if (!rate) return;
+
+  const left = withoutRate(rates, index);
+  const message =
+    left.length === 0
+      ? `Delete ${formatMoney(rate.amount)} an hour? Estimated pay will stop showing.`
+      : `Delete ${formatMoney(rate.amount)} an hour?` +
+        ` Those weeks go back to ${formatMoney(rateOn(left, rate.from))}.`;
+
+  askConfirm(message, "Delete", () => {
+    settings.rates = left;
+    saveSettings(settings);
+    renderRateSettings();
+    renderTotals();
+    toast("Pay deleted");
+  });
+}
+
+/** Quante settimane registrate cadono nel periodo coperto da quella paga. */
+function weeksPaidAt(rates, index) {
+  const from = index === 0 ? "0000-01-01" : rates[index].from;
+  const until = validUntil(rates, index);
+  return allWeeks().filter((entry) => {
+    const sunday = toISODate(sundayOf(entry.weekStart));
+    return sunday >= from && (until === null || entry.weekStart <= until);
+  }).length;
 }
 
 function renderTypeSettings() {
@@ -441,7 +689,8 @@ function renderTypeSettings() {
   el("add-type").hidden = left <= 0;
   el("type-note").textContent =
     left > 0
-      ? `Week and Weekend are always there. You can add ${left} more of your own.`
+      ? `${FIXED_TYPES.map((t) => t.name).join(" and ")} are always there.` +
+        ` You can add ${left} more of your own.`
       : "You have all three of your own week types.";
 }
 
@@ -659,6 +908,7 @@ function bindEvents() {
   el("open-types").addEventListener("click", openTypeSheet);
   el("open-settings").addEventListener("click", openSettings);
   el("open-history").addEventListener("click", openHistory);
+  el("open-calendar").addEventListener("click", openCalendar);
   el("back-to-current").addEventListener("click", backToCurrent);
   el("clear-week").addEventListener("click", clearWeek);
   el("delete-week").addEventListener("click", deleteWeek);
@@ -690,10 +940,28 @@ function bindEvents() {
     if (close) el(close.dataset.close).hidden = true;
   });
 
-  el("hourly-rate").addEventListener("input", (event) => {
-    settings.hourlyRate = readRate(event.target.value);
-    saveSettings(settings);
-    renderTotals();
+  // "change" e non "input": su input la conferma si aprirebbe a ogni tasto
+  // premuto, mentre sta ancora scrivendo la cifra.
+  el("hourly-rate").addEventListener("change", (event) => {
+    submitRateField(event.target.value);
+  });
+
+  el("add-rate").addEventListener("click", () => {
+    addingRate = true;
+    renderRateSettings();
+    el("hourly-rate").focus();
+  });
+
+  el("rate-list").addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-delete-rate]");
+    if (remove) return deleteRate(Number(remove.dataset.deleteRate));
+    const edit = event.target.closest("[data-edit-rate]");
+    if (edit) {
+      editingRate = Number(edit.dataset.editRate);
+      addingRate = false;
+      renderRateSettings();
+      el("hourly-rate").focus();
+    }
   });
 
   el("add-type").addEventListener("click", addCustomType);
