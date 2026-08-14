@@ -27,6 +27,8 @@ import {
   workedDays,
 } from "./week.js";
 
+import { noteForWeek } from "./notes.js";
+
 /**
  * @returns {string|null} il messaggio, o null se non ha lavorato nessun giorno
  */
@@ -96,13 +98,20 @@ export function buildReceipt(week, days) {
   const title = `Week ending ${formatDayMonth(sundayOf(week.weekStart))}`;
   const total = formatTotalLong(totalMinutes(week, days));
 
-  return [
+  const lines = [
     padCenter(title, width),
     rule,
     ...rows,
     rule,
     "Total".padEnd(9) + total.padStart(width - 9),
-  ].join("\n");
+  ];
+
+  // La frase della settimana, centrata come il titolo e staccata dal totale.
+  // Non esiste in `buildSummary()`: al capo non arriva.
+  const note = noteForWeek(week.weekStart);
+  if (note) lines.push("", padCenter(note, width));
+
+  return lines.join("\n");
 }
 
 function padCenter(text, width) {

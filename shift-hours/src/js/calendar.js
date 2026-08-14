@@ -45,14 +45,18 @@ export function shiftMonth(month, delta) {
 /**
  * Da quale mese a quale mese si può scorrere.
  *
- * Dal mese della prima settimana registrata fino a dodici mesi dopo oggi: così
- * può guardare avanti quando cadono i prossimi bank holiday. Oltre non c'è
- * niente da vedere.
+ * Estremi fissi, decisi con Lorenzo: gennaio 2026 – dicembre 2028. Non
+ * dipendono dai dati né dalla data di oggi, così il calendario è sempre lo
+ * stesso e i mesi vuoti davanti e dietro non spariscono da soli.
+ *
+ * Quando ci si avvicinerà alla fine del 2028, `LAST_MONTH` va spostato: è
+ * l'unica riga da cambiare.
  */
-export function monthRange(weeks, today = new Date()) {
-  const now = monthOf(toISODate(today));
-  const starts = weeks.map((entry) => monthOf(entry.weekStart)).sort();
-  return { first: starts[0] ?? now, last: shiftMonth(now, 12) };
+export const FIRST_MONTH = "2026-01";
+export const LAST_MONTH = "2028-12";
+
+export function monthRange() {
+  return { first: FIRST_MONTH, last: LAST_MONTH };
 }
 
 /** L'elenco dei mesi dal primo all'ultimo compresi, dal più vecchio. */
