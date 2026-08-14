@@ -14,6 +14,7 @@ import {
   formatDuration,
   formatHrs,
   formatTime,
+  fromISODate,
   shiftMinutes,
   sundayOf,
   toISODate,
@@ -26,20 +27,28 @@ import {
   MAX_CUSTOM_TYPES,
   MAX_TYPE_NAME,
   allTypes,
+  allWeeks,
+  applyBackup,
   currentWeekStart,
   deleteHistoryWeek,
   exportAll,
+  exportUntil,
   findHistoryWeek,
   findType,
+  loadBackupState,
   loadCurrentWeek,
   loadHistory,
   loadSettings,
   newWeek,
   pushHistory,
+  readBackup,
+  saveBackupState,
   saveCurrentWeek,
   saveSettings,
   updateHistoryWeek,
 } from "./storage.js";
+
+import { pendingBackup } from "./backup.js";
 
 import { createRangeSlider } from "./slider.js";
 import { buildSummary, copyText } from "./summary.js";
@@ -127,6 +136,7 @@ function render() {
 
   renderDays();
   renderTotals();
+  renderBackupAlert();
 }
 
 function renderDays() {
@@ -304,9 +314,11 @@ function backToCurrent() {
 
 /* ── Cancellazioni, sempre con conferma ───────────────────────────── */
 
-function askConfirm(message, label, action) {
+function askConfirm(message, label, action, { danger = true } = {}) {
   el("confirm-text").textContent = message;
   el("confirm-yes").textContent = label;
+  // Ripristinare non distrugge niente (regola 1): non deve vestirsi di rosso.
+  el("confirm-yes").classList.toggle("sh-btn--danger", danger);
   confirmAction = action;
   el("scrim").hidden = false;
   el("confirm-sheet").hidden = false;
@@ -380,6 +392,7 @@ function chooseType(typeId) {
 function openSettings() {
   el("hourly-rate").value = settings.hourlyRate ?? "";
   renderTypeSettings();
+  renderBackupStatus();
   el("settings-layer").hidden = false;
 }
 
@@ -491,22 +504,26 @@ function readRate(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-/* ── Backup ───────────────────────────────────────────────────────── */
+/* ── Copie di sicurezza ───────────────────────────────────────────── */
 
-async function downloadBackup() {
-  const content = JSON.stringify(exportAll(), null, 2);
-  const name = `shift-hours-backup-${toISODate(new Date())}.json`;
-
-  // Su iPhone il modo naturale di salvare un file è il pannello di condivisione
-  // ("Salva su File"); altrove si scarica come un file qualsiasi.
+/**
+ * Consegna un file a iPhone. Su iPhone il modo naturale è il pannello di
+ * condivisione ("Salva su File"); altrove si scarica come un file qualsiasi.
+ *
+ * @returns {Promise<boolean>} vero solo se il file è davvero uscito dall'app.
+ *   Se lei annulla il pannello si torna falso, e chi chiama non deve
+ *   considerare fatta la copia (regola 2 del piano).
+ */
+async function offerFile(name, content) {
   if (navigator.canShare) {
     const file = new File([content], name, { type: "application/json" });
     if (navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file] });
-        return;
+        return true;
       } catch (error) {
-        if (error?.name === "AbortError") return; // ha annullato lei
+        if (error?.name === "AbortError") return false; // ha annullato lei
+        // Qualunque altro errore: si prova il ripiego qui sotto.
       }
     }
   }
@@ -519,7 +536,87 @@ async function downloadBackup() {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast("Backup saved");
+  return true;
+}
+
+/** La copia richiesta dall'avviso: si ferma all'ultima settimana del mese. */
+function pending() {
+  const state = loadBackupState();
+  return pendingBackup(currentWeekStart(), allWeeks(), state.lastMonth);
+}
+
+function renderBackupAlert() {
+  // Solo sulla settimana corrente: sfogliando una passata non ha senso.
+  const due = viewing ? null : pending();
+  el("backup-alert").hidden = due === null;
+  if (due) el("backup-alert-title").textContent = `Back up ${due.title}`;
+}
+
+async function backupMonth() {
+  const due = pending();
+  if (!due) return;
+
+  const content = JSON.stringify(exportUntil(due.until, due.label), null, 2);
+  const saved = await offerFile(due.name, content);
+  if (!saved) return; // annullato: l'avviso resta dov'è
+
+  saveBackupState({
+    lastMonth: due.month,
+    lastSavedAt: toISODate(new Date()),
+    lastLabel: due.label,
+  });
+  renderBackupAlert();
+  renderBackupStatus();
+  toast(`${due.label} saved`);
+}
+
+async function downloadBackup() {
+  const content = JSON.stringify(exportAll(), null, 2);
+  const saved = await offerFile(`shift-hours-backup-${toISODate(new Date())}.json`, content);
+  if (saved) toast("Backup saved");
+}
+
+function renderBackupStatus() {
+  const state = loadBackupState();
+  const node = el("backup-status");
+  const done = Boolean(state.lastMonth && state.lastSavedAt);
+
+  node.textContent = done
+    ? `Last backup: ${state.lastLabel} — ${formatDayMonth(fromISODate(state.lastSavedAt))}`
+    : "No backup yet";
+  node.classList.toggle("sh-group__note--warn", !done);
+}
+
+/* ── Ripristino ───────────────────────────────────────────────────── */
+
+async function chooseRestoreFile(event) {
+  const file = event.target.files?.[0];
+  // Azzerare il campo permette di riscegliere lo stesso file una seconda volta.
+  event.target.value = "";
+  if (!file) return;
+
+  let parsed;
+  try {
+    parsed = readBackup(await file.text());
+  } catch {
+    toast("That file is not a Shift Hours backup");
+    return;
+  }
+
+  const count = parsed.weeks.length;
+  askConfirm(
+    `This backup ends on ${formatDayMonth(fromISODate(parsed.coversUntil))} and has ` +
+      `${count} ${count === 1 ? "week" : "weeks"}. Restore it?`,
+    "Restore",
+    () => {
+      const done = applyBackup(parsed);
+      el("settings-layer").hidden = true;
+      backToCurrent();
+      renderBackupStatus();
+      toast(`${done.weeks} ${done.weeks === 1 ? "week" : "weeks"} restored`);
+    },
+    { danger: false }
+  );
 }
 
 /* ── Notifiche ────────────────────────────────────────────────────── */
@@ -566,6 +663,9 @@ function bindEvents() {
   el("clear-week").addEventListener("click", clearWeek);
   el("delete-week").addEventListener("click", deleteWeek);
   el("download-backup").addEventListener("click", downloadBackup);
+  el("backup-now").addEventListener("click", backupMonth);
+  el("restore-backup").addEventListener("click", () => el("restore-file").click());
+  el("restore-file").addEventListener("change", chooseRestoreFile);
 
   el("scrim").addEventListener("click", closeSheets);
   el("confirm-no").addEventListener("click", closeSheets);
