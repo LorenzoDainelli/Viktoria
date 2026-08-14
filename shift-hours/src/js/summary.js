@@ -4,9 +4,12 @@
  * è ciò che riceve il suo capo e su cui viene pagata.
  *
  *   Week ending 16 August
- *   Monday: 8:00/16:30 - 8.30 hrs
- *   Saturday: 8:30/17:00 - 8.30 hrs
+ *   Monday: 8:00 - 16:30 8.30 hrs
+ *   Saturday: 8:30 - 17:00 8.30 hrs
  *   17 hours
+ *
+ * Fra i due orari un trattino spaziato, fra l'orario di fine e le ore solo
+ * uno spazio: è il formato chiesto da Viktoria il 14 agosto 2026.
  *
  * Con un solo giorno lavorato l'ultima riga sparisce: ripeterebbe la stessa
  * cifra. La paga stimata non entra mai nel messaggio.
@@ -36,8 +39,8 @@ export function buildSummary(week, days) {
   for (const day of worked) {
     const shift = week.days[day];
     lines.push(
-      `${DAY_NAMES[day - 1]}: ${formatTime(shift.start)}/${formatTime(shift.end)}` +
-      ` - ${formatHrs(shiftMinutes(shift))}`
+      `${DAY_NAMES[day - 1]}: ${formatTime(shift.start)} - ${formatTime(shift.end)}` +
+      ` ${formatHrs(shiftMinutes(shift))}`
     );
   }
 

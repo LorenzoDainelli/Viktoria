@@ -199,11 +199,11 @@ capo e su cui viene pagata.
 
 ```
 Week ending 5 July
-Monday: 7:30/17:20 - 9.50 hrs
-Wednesday: 7:30/17:00 - 9.30 hrs
-Friday: 7:30/17:00 - 9.30 hrs
-Saturday: 8:30/16:15 - 7.45 hrs
-Sunday: 9:00/17:25 - 8.25 hrs
+Monday: 7:30 - 17:20 9.50 hrs
+Wednesday: 7:30 - 17:00 9.30 hrs
+Friday: 7:30 - 17:00 9.30 hrs
+Saturday: 8:30 - 16:15 7.45 hrs
+Sunday: 9:00 - 17:25 8.25 hrs
 45 hours
 ```
 
@@ -215,12 +215,13 @@ quella della domenica.
 
 **Righe dei giorni** — una per ogni giorno lavorato, sempre in ordine da lunedì a
 domenica, solo i giorni previsti dal tipo di settimana:
-`<Giorno>: <inizio>/<fine> - <durata> hrs`
+`<Giorno>: <inizio> - <fine> <durata> hrs`
 
 - nome del giorno in inglese con l'iniziale maiuscola, seguito da due punti;
 - orari in formato 24 ore, senza zero davanti all'ora (`7:30`, `17:20`), minuti
-  sempre a due cifre, separati da `/` senza spazi;
-- poi ` - `, la durata, uno spazio, `hrs`.
+  sempre a due cifre, separati da ` - ` (trattino con uno spazio per parte);
+- poi **un solo spazio**, la durata, uno spazio, `hrs`. Fra l'orario di fine e
+  la durata non c'è trattino: confermato da Lorenzo il 14 agosto 2026.
 
 **Durata: ore e minuti, NON decimali.** `9.50 hrs` significa 9 ore e 50 minuti
 (è la convenzione che lei già usa col capo). Regole:
@@ -250,7 +251,7 @@ giorno, il totale sparisce perché ripeterebbe la stessa cifra:
 
 ```
 Week ending 5 July
-Monday: 7:30/17:20 - 9.50 hrs
+Monday: 7:30 - 17:20 9.50 hrs
 ```
 
 **Caso "nessun giorno lavorato"** — non si genera nessun messaggio: il pulsante
@@ -342,7 +343,7 @@ di passare al successivo.
   - Sotto lo slider, due coppie di pulsanti `−` / `+` (una per l'inizio, una per
     la fine) che spostano di 5 minuti per tocco.
   - Mostra in tempo reale l'intervallo e la durata nello **stesso formato del
-    messaggio** (`7:30/17:20 - 9.50 hrs`), mai in decimali.
+    messaggio** (`7:30 - 17:20 9.50 hrs`), mai in decimali.
   - Stato iniziale del giorno: nessun intervallo impostato, il giorno risulta
     "non lavorato".
 - **Vincolo:** nessun campo di testo, nessuna tastiera, in nessun caso.
