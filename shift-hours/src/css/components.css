@@ -672,11 +672,26 @@ button { cursor: pointer; touch-action: manipulation; }
    che tiene in riga i numeri. A 14px i 35 caratteri stanno dentro un iPhone 15
    senza scorrimento — `white-space: pre` e non `pre-wrap`, perché una riga
    mandata a capo distruggerebbe l'incolonnamento. */
+/* Lo strappo sopra e sotto è disegnato come sfondo dell'elemento, non con
+   ::before e ::after: quelli andrebbero posizionati fuori dal riquadro, e
+   `overflow-x: auto` — che serve da rete di sicurezza se un giorno il testo
+   diventasse più largo — li ritaglierebbe via senza dire niente.
+ *
+ * Tre strati: la merlatura in cima, quella in fondo, e la carta piena in
+ * mezzo. Passo 14px con raggio 6.5: più largo sembra una tenda da sole, più
+ * stretto non si legge e pare un bordo sbagliato. Le tacche sono trasparenti,
+ * quindi lasciano vedere lo sfondo della schermata. */
 .sh-preview__bubble {
   margin: 0;
-  padding: var(--sh-space-4) var(--sh-space-5);
-  border-radius: var(--sh-radius-md);
-  background: var(--sh-surface);
+  /* Lo spazio verticale tiene conto dei 7px di merlatura sopra e sotto. */
+  padding: calc(var(--sh-space-5) + 7px) var(--sh-space-5);
+  background:
+    radial-gradient(circle at 7px 0, transparent 6.5px, var(--sh-surface) 7px)
+      top / 14px 7px repeat-x,
+    radial-gradient(circle at 7px 7px, transparent 6.5px, var(--sh-surface) 7px)
+      bottom / 14px 7px repeat-x,
+    linear-gradient(var(--sh-surface), var(--sh-surface))
+      center / 100% calc(100% - 14px) no-repeat;
   color: var(--sh-text);
   font-family: var(--sh-mono);
   font-size: var(--sh-size-mono);
@@ -1146,8 +1161,13 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 
 /* L'importo arrotondato all'euro: i centesimi restano solo in Estimated pay,
-   qui non ci starebbero e non servirebbero. */
+   qui non ci starebbero e non servirebbero.
+ *
+ * `height` fissa, e lo span c'è sempre anche quando è vuoto: se no una casella
+ * senza importo centrerebbe il solo numero, e nella stessa riga i numeri dei
+ * giorni lavorati starebbero più in alto degli altri. */
 .sh-cal__pay {
+  height: 1em;
   font-size: var(--sh-size-2xs);
   line-height: 1;
   opacity: 0.85;

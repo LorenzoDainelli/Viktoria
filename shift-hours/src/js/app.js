@@ -470,7 +470,7 @@ function monthMarkup(month, byDay) {
         <div class="${classes.join(" ")}"${cell.heat === null ? "" : ` data-heat="${cell.heat}"`}
              role="img" aria-label="${escapeHtml(label)}">
           <span class="sh-cal__num">${cell.day}</span>
-          ${cell.pay ? `<span class="sh-cal__pay">${formatMoneyRounded(cell.pay)}</span>` : ""}
+          <span class="sh-cal__pay">${cell.pay ? formatMoneyRounded(cell.pay) : ""}</span>
         </div>`;
     })
     .join("");
