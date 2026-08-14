@@ -40,10 +40,51 @@ python3 -m http.server 8000 --directory src
 
 ## Dove vivono i dati
 
-Solo sul dispositivo, in `localStorage`, sotto tre chiavi:
-`shifthours:current-week`, `shifthours:history`, `shifthours:settings`.
-Nessun server, nessun account, nessuna sincronizzazione. **Nel repo non finisce
-mai nessun dato reale**, paga oraria compresa: si inserisce dall'app.
+Solo sul dispositivo, in `localStorage`, sotto quattro chiavi:
+`shifthours:current-week`, `shifthours:history`, `shifthours:settings`,
+`shifthours:backup`. Nessun server, nessun account, nessuna sincronizzazione.
+**Nel repo non finisce mai nessun dato reale**, paga oraria compresa: si
+inserisce dall'app.
+
+Due telefoni sono due mondi separati: la stessa app aperta su due dispositivi
+non condivide niente. La settimana in corso è calcolata dall'orologio locale,
+quindi funziona anche in fusi diversi.
+
+## Copie di sicurezza
+
+Siccome i dati vivono solo nel telefono, se qualcuno cancella i dati dei siti
+in Impostazioni → Safari, o se si cambia telefono, **non c'è niente da cui
+recuperarli**. Peggio: l'app non se ne accorgerebbe nemmeno, perché si
+cancellerebbe anche il segnalino che dice "qui c'erano dei dati". Si
+riaprirebbe vuota, senza poter avvisare.
+
+Per questo, quando un mese si chiude, fra l'elenco dei giorni e l'anteprima del
+messaggio compare un avviso arancione — *Back up July* — che **resta finché la
+copia non è stata fatta**. Non si può chiudere.
+
+Toccando la freccia si apre il pannello di condivisione di iPhone: *Salva su
+File*, si sceglie la cartella (dalla seconda volta iPhone ripropone l'ultima) e
+si salva. Se si annulla, l'avviso resta al suo posto.
+
+**Regole che governano tutto questo** (dettagli in `PIANO-FASE-2.md`):
+
+- una settimana appartiene al mese della sua **domenica**: le ore di lunedì
+  31 agosto 2026 finiscono in `September26`, non in `August26`;
+- il file è **cumulativo**: `September26` contiene anche agosto. Se un mese
+  viene saltato, manca solo quel nome — nessun dato va perso;
+- **il ripristino non cancella mai settimane più recenti del file.** Un backup
+  di agosto rimesso dentro a settembre lascia settembre intatto;
+- l'avviso sparisce **solo a salvataggio davvero avvenuto**.
+
+Nelle impostazioni ci sono anche `Download backup`, che salva la fotografia
+completa **fino a oggi** (settimana in corso inclusa, nome con la data), e
+`Restore from backup`, che rimette dentro un file mostrando prima cosa contiene.
+I backup prodotti dalla Fase 1, senza numero di versione, si ripristinano lo
+stesso.
+
+> ⚠️ **Non cancellare mai l'icona dalla schermata home** per "forzare" un
+> aggiornamento: su iPhone, togliendo l'icona si cancellano anche i dati
+> dell'app. L'aggiornamento non ne ha mai bisogno.
 
 ## Come si aggiorna dopo che è installata sul telefono
 

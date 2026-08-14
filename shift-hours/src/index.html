@@ -56,6 +56,19 @@
 
     <div class="sh-days" id="days"></div>
 
+    <!-- Copia di sicurezza: sta qui, fra i giorni e l'anteprima, sulla strada
+         che lei percorre ogni settimana per copiare le ore. Non si chiude:
+         se ne va solo quando il file è stato davvero salvato. -->
+    <div class="sh-alert" id="backup-alert" hidden>
+      <div class="sh-alert__text">
+        <span class="sh-alert__title" id="backup-alert-title"></span>
+        <span class="sh-alert__note">Keep a copy of your hours on your phone.</span>
+      </div>
+      <button class="sh-alert__btn" type="button" id="backup-now" aria-label="Save a backup">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>
+      </button>
+    </div>
+
     <div class="sh-preview" id="preview" hidden>
       <span class="sh-preview__label">Message preview</span>
       <p class="sh-preview__bubble" id="preview-text"></p>
@@ -123,7 +136,9 @@
       <div class="sh-group">
         <span class="sh-group__label">Your hours</span>
         <button class="sh-btn sh-btn--secondary" type="button" id="download-backup">Download backup</button>
-        <p class="sh-group__note">A copy of every week, saved to your phone.</p>
+        <button class="sh-btn sh-btn--secondary" type="button" id="restore-backup">Restore from backup</button>
+        <input id="restore-file" type="file" accept="application/json,.json" hidden>
+        <p class="sh-group__note" id="backup-status"></p>
       </div>
 
     </div>
