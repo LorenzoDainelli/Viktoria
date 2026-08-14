@@ -687,3 +687,35 @@ giorno. Il Task 8 viene prima del 9 come in Fase 2: l'aspetto si approva su
 3. **La data di una paga nuova è quella del giorno in cui la inserisce**, ed è
    correggibile subito dopo. In alternativa si può chiedere la data ogni volta:
    più preciso, un passaggio in più.
+
+*Tutti e tre confermati dall'utente il 14 agosto 2026.*
+
+---
+
+## 11. Cosa è cambiato rispetto al piano, durante la costruzione
+
+Scritto qui perché un contratto che non registra le deviazioni smette di
+essere un contratto.
+
+- **Task 0** — la motivazione iniziale era sbagliata: davo per mancanti
+  l'avviso arancione, la riga di stato e la conferma di ripristino, che erano
+  già tutti presenti. Mancavano invece cinque componenti (`sh-chip`,
+  `sh-rate`, `sh-typename`, `sh-empty`, `sh-scrim`) e due punti fuori sincrono
+  col codice. Nel farlo è emerso che `.sh-rate`, `.sh-typename` e `.sh-empty`
+  vivevano in `src/css/app.css`, che `design_handoff/` non contiene e
+  `reference.html` non carica: erano **invisibili al pacchetto di design**.
+  Spostati in `components.css`.
+- **Task 1** — tocca anche `src/index.html` e `src/js/`, che il piano non
+  prevedeva, per la richiesta dell'utente sui nomi dei tipi di settimana
+  (`Full Week`, `Mon to Sun`). Aggiunta `displayTypeName()` perché le
+  settimane archiviate mostrino il nome nuovo.
+- **Task 3** — il criterio diceva «October 2028 = 23 ottobre». Sbagliato: il
+  31 ottobre 2028 è un martedì, quindi l'ultimo lunedì è il **30**. Il codice
+  era giusto, il criterio no.
+- **Task 5** — la correzione di una paga usa il campo dell'app, non una
+  finestra del browser, e l'evento è `change` e non `input`: su `input` la
+  conferma si sarebbe aperta a ogni tasto premuto.
+- **Task 8** — l'anello giallo dei bank holiday passa la soglia di 3:1 solo
+  sui due gradini scuri della sfumatura. Misurato e annotato nei token; la
+  scelta del giallo era già stata presa dall'utente con i numeri sotto gli
+  occhi.
