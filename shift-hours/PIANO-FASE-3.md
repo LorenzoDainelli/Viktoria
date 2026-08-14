@@ -518,7 +518,9 @@ completa e usabile, e si può decidere di fermarsi lì.
   - St Brigid's Day 2026 = **2 febbraio** (non l'1). St Brigid's Day 2027 =
     1 febbraio.
   - Easter Monday 2026 = 6 aprile, 2027 = 29 marzo.
-  - October 2026 = 26 ottobre (ultimo lunedì), 2028 = 23 ottobre.
+  - October 2026 = 26 ottobre, 2027 = 25 ottobre, 2028 = **30** ottobre
+    (ultimo lunedì: nel 2028 il 31 ottobre è un martedì, quindi il 30 è
+    l'ultimo lunedì — non il 23).
   - Un anno qualunque fra 2020 e 2040 non solleva errori.
   - Nessun uso di UTC: si ragiona sull'orologio del telefono, come `week.js`.
 

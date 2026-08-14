@@ -115,15 +115,17 @@
 
       <div class="sh-group">
         <span class="sh-group__label">Pay</span>
-        <div class="sh-row">
-          <span class="sh-row__label">Hourly rate</span>
+        <div class="sh-group" id="rate-list"></div>
+        <div class="sh-row" id="rate-new-row">
+          <span class="sh-row__label" id="rate-new-label">Hourly rate</span>
           <span class="sh-rate">
             <span class="sh-rate__currency">€</span>
             <input class="sh-row__input" id="hourly-rate" type="text" inputmode="decimal"
                    placeholder="—" aria-label="Hourly rate">
           </span>
         </div>
-        <p class="sh-group__note">Leave it empty to hide estimated pay.</p>
+        <button class="sh-btn sh-btn--secondary" type="button" id="add-rate" hidden>New pay</button>
+        <p class="sh-group__note" id="rate-note">Leave it empty to hide estimated pay.</p>
       </div>
 
       <div class="sh-group">

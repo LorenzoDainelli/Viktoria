@@ -308,6 +308,17 @@ button { cursor: pointer; touch-action: manipulation; }
   flex: none;
 }
 
+/* Bank holiday: stesso pallino di oggi, giallo, ma a destra del nome invece
+   che a sinistra. Un giorno può averli entrambi. Compare anche nei giorni non
+   lavorati: serve a sapere in anticipo che lunedì prossimo è festa. */
+.sh-day__holiday {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-holiday);
+  flex: none;
+}
+
 .sh-day__value {
   display: flex;
   flex-direction: column;
@@ -833,6 +844,47 @@ button { cursor: pointer; touch-action: manipulation; }
   background: var(--sh-bg);
   font-size: var(--sh-size-md);
   font-weight: var(--sh-weight-medium);
+}
+
+/* Una paga dello storico: quanto, e da quando. La riga intera si tocca per
+   correggerla; la ✕ accanto la cancella. */
+.sh-raterow {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-raterow__edit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sh-touch-min);
+  padding: var(--sh-space-3) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  text-align: left;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-raterow__edit:active { background: var(--sh-surface-strong); }
+
+.sh-raterow__amount {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sh-raterow__from {
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Elenco vuoto: lo storico prima che ci sia dentro qualcosa */

@@ -9,6 +9,7 @@ import {
   DAY_INITIALS,
   DAY_NAMES,
   boundsFor,
+  dateOfDay,
   formatDayMonth,
   formatDayMonthYear,
   formatDuration,
@@ -51,6 +52,17 @@ import {
 } from "./storage.js";
 
 import { pendingBackup } from "./backup.js";
+import { holidayName, isHoliday } from "./holidays.js";
+
+import {
+  formatMoney,
+  rateOn,
+  validUntil,
+  weekPay,
+  withEditedRate,
+  withRate,
+  withoutRate,
+} from "./rates.js";
 
 import { createRangeSlider } from "./slider.js";
 import { buildReceipt, buildSummary, copyText } from "./summary.js";
@@ -66,6 +78,8 @@ let type;
 let viewing = null; // null = settimana corrente, altrimenti la data di una passata
 let openDay = null;
 let confirmAction = null;
+let addingRate = false;      // sta scrivendo una paga nuova
+let editingRate = null;      // indice della paga che sta correggendo
 
 /* ── Avvio ────────────────────────────────────────────────────────── */
 
@@ -151,6 +165,9 @@ function dayMarkup(day) {
   const shift = week.days[day];
   const isOpen = openDay === day;
   const isToday = isCurrentWeek() && todayNumber() === day;
+  // Il pallino giallo compare anche nei giorni non lavorati: serve pure a
+  // sapere in anticipo che lunedì prossimo è festa.
+  const holiday = holidayName(toISODate(dateOfDay(week.weekStart, day)));
 
   const classes = ["sh-day"];
   if (shift) classes.push("sh-day--filled");
@@ -178,6 +195,7 @@ function dayMarkup(day) {
         <span class="sh-day__name">
           ${isToday ? '<span class="sh-day__today" aria-hidden="true"></span>' : ""}
           ${DAY_NAMES[day - 1]}
+          ${holiday ? `<span class="sh-day__holiday" role="img" aria-label="${escapeHtml(holiday)}"></span>` : ""}
         </span>
         ${value}
       </button>
@@ -217,13 +235,12 @@ function renderTotals() {
   const total = totalMinutes(week, type.days);
   el("total-hours").textContent = formatDuration(total);
 
-  const rate = settings.hourlyRate;
-  if (rate) {
-    el("pay-value").textContent = `${((total / 60) * rate).toFixed(2)}€`;
-    el("pay-line").hidden = false;
-  } else {
-    el("pay-line").hidden = true;
-  }
+  // La somma dei giorni, non il totale delle ore per una paga sola: è l'unico
+  // modo perché una settimana a cavallo di un aumento — o con dentro un bank
+  // holiday, che vale il doppio — venga giusta.
+  const pay = weekPay(week, type.days, settings.rates);
+  el("pay-value").textContent = pay === null ? "" : formatMoney(pay);
+  el("pay-line").hidden = pay === null;
 
   // Due testi diversi di proposito: lo scontrino si guarda, il messaggio si
   // copia. Al capo arriva sempre e solo `summary`.
@@ -402,10 +419,160 @@ function chooseType(typeId) {
 /* ── Impostazioni ─────────────────────────────────────────────────── */
 
 function openSettings() {
-  el("hourly-rate").value = settings.hourlyRate ?? "";
+  renderRateSettings();
   renderTypeSettings();
   renderBackupStatus();
   el("settings-layer").hidden = false;
+}
+
+/* ── La paga oraria nel tempo ─────────────────────────────────────── */
+
+/**
+ * La prima paga non porta una data: vale dall'inizio, e scrivere "from
+ * 1 January 1970" non direbbe niente a nessuno. Le successive dicono da
+ * quando, e quelle finite dicono anche fino a quando.
+ */
+function rateWhen(rates, index) {
+  const until = validUntil(rates, index);
+  const end = until ? formatDayMonthYear(fromISODate(until)) : null;
+
+  if (index === 0) return end ? `Up to ${end}` : "From the start";
+
+  const from = formatDayMonthYear(fromISODate(rates[index].from));
+  return end ? `${from} – ${end}` : `From ${from}`;
+}
+
+function renderRateSettings() {
+  const rates = settings.rates;
+
+  el("rate-list").innerHTML = rates
+    .map(
+      (rate, i) => `
+      <div class="sh-raterow">
+        <button class="sh-raterow__edit" type="button" data-edit-rate="${i}">
+          <span class="sh-raterow__amount">${formatMoney(rate.amount)} an hour</span>
+          <span class="sh-raterow__from">${rateWhen(rates, i)}</span>
+        </button>
+        <button class="sh-iconbtn sh-iconbtn--plain" type="button" data-delete-rate="${i}"
+                aria-label="Delete ${formatMoney(rate.amount)} an hour">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>`
+    )
+    .join("");
+
+  // Con la lista vuota il campo è quello di sempre e resta in vista: la prima
+  // paga si inserisce senza dover prima capire cos'è uno storico.
+  const empty = rates.length === 0;
+  const open = empty || addingRate || editingRate !== null;
+
+  el("rate-new-row").hidden = !open;
+  el("add-rate").hidden = open;
+  el("rate-new-label").textContent =
+    editingRate !== null ? "Change this pay" : empty ? "Hourly rate" : "New pay from today";
+  el("hourly-rate").value = editingRate !== null ? String(rates[editingRate].amount) : "";
+
+  el("rate-note").textContent = empty
+    ? "Leave it empty to hide estimated pay."
+    : "A new pay only counts from the day you add it. Weeks before it keep the old one.";
+}
+
+/** Il campo torna a essere quello per una paga nuova. */
+function resetRateField() {
+  addingRate = false;
+  editingRate = null;
+  renderRateSettings();
+}
+
+/**
+ * Il campo è uno solo e fa due cose: se sta correggendo una paga la cambia,
+ * se no ne aggiunge una nuova da oggi. Nessuna finestra del browser: le
+ * conferme sono quelle dell'app, con i numeri dentro.
+ */
+function submitRateField(value) {
+  const amount = readRate(value);
+  if (amount === null) return resetRateField();
+
+  if (editingRate !== null) return applyRateEdit(editingRate, amount);
+  return applyNewRate(amount);
+}
+
+function applyNewRate(amount) {
+  const rates = settings.rates;
+  const from = toISODate(new Date());
+  const before = rateOn(rates, from);
+  const first = rates.length === 0;
+
+  const apply = () => {
+    settings.rates = withRate(rates, from, amount);
+    resetRateField();
+    saveSettings(settings);
+    renderTotals();
+    toast(first ? "Pay saved" : `Pay is now ${formatMoney(amount)} an hour`);
+  };
+
+  // La prima paga non toglie niente a nessuno: non c'è da confermare.
+  if (first) return apply();
+
+  askConfirm(
+    `From today your pay is ${formatMoney(amount)} an hour.` +
+      ` Weeks before today keep ${formatMoney(before)}.`,
+    "Save",
+    apply,
+    { danger: false }
+  );
+}
+
+function applyRateEdit(index, amount) {
+  const rate = settings.rates[index];
+  if (!rate || amount === rate.amount) return resetRateField();
+
+  const weeks = weeksPaidAt(settings.rates, index);
+  askConfirm(
+    `This pay changes from ${formatMoney(rate.amount)} to ${formatMoney(amount)}.` +
+      ` It affects ${weeks === 1 ? "1 week" : `${weeks} weeks`}.`,
+    "Save",
+    () => {
+      settings.rates = withEditedRate(settings.rates, index, rate.from, amount);
+      resetRateField();
+      saveSettings(settings);
+      renderTotals();
+      toast("Pay updated");
+    },
+    { danger: false }
+  );
+}
+
+function deleteRate(index) {
+  const rates = settings.rates;
+  const rate = rates[index];
+  if (!rate) return;
+
+  const left = withoutRate(rates, index);
+  const message =
+    left.length === 0
+      ? `Delete ${formatMoney(rate.amount)} an hour? Estimated pay will stop showing.`
+      : `Delete ${formatMoney(rate.amount)} an hour?` +
+        ` Those weeks go back to ${formatMoney(rateOn(left, rate.from))}.`;
+
+  askConfirm(message, "Delete", () => {
+    settings.rates = left;
+    saveSettings(settings);
+    renderRateSettings();
+    renderTotals();
+    toast("Pay deleted");
+  });
+}
+
+/** Quante settimane registrate cadono nel periodo coperto da quella paga. */
+function weeksPaidAt(rates, index) {
+  const from = index === 0 ? "0000-01-01" : rates[index].from;
+  const until = validUntil(rates, index);
+  return allWeeks().filter((entry) => {
+    const sunday = toISODate(sundayOf(entry.weekStart));
+    return sunday >= from && (until === null || entry.weekStart <= until);
+  }).length;
 }
 
 function renderTypeSettings() {
@@ -703,10 +870,28 @@ function bindEvents() {
     if (close) el(close.dataset.close).hidden = true;
   });
 
-  el("hourly-rate").addEventListener("input", (event) => {
-    settings.hourlyRate = readRate(event.target.value);
-    saveSettings(settings);
-    renderTotals();
+  // "change" e non "input": su input la conferma si aprirebbe a ogni tasto
+  // premuto, mentre sta ancora scrivendo la cifra.
+  el("hourly-rate").addEventListener("change", (event) => {
+    submitRateField(event.target.value);
+  });
+
+  el("add-rate").addEventListener("click", () => {
+    addingRate = true;
+    renderRateSettings();
+    el("hourly-rate").focus();
+  });
+
+  el("rate-list").addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-delete-rate]");
+    if (remove) return deleteRate(Number(remove.dataset.deleteRate));
+    const edit = event.target.closest("[data-edit-rate]");
+    if (edit) {
+      editingRate = Number(edit.dataset.editRate);
+      addingRate = false;
+      renderRateSettings();
+      el("hourly-rate").focus();
+    }
   });
 
   el("add-type").addEventListener("click", addCustomType);

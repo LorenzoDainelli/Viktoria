@@ -7,15 +7,24 @@
 
 import { toISODate, mondayOf } from "./week.js";
 import { sundayOfWeek, weeksWithin } from "./backup.js";
+import { latestAmount, ratesFromSettings } from "./rates.js";
 
 const KEY_SETTINGS = "shifthours:settings";
 const KEY_CURRENT = "shifthours:current-week";
 const KEY_HISTORY = "shifthours:history";
 const KEY_BACKUP = "shifthours:backup";
 
-/* Numero di versione del file esportato. I file senza questo campo sono della
-   Fase 1: si ripristinano lo stesso, trattandoli come versione 1. */
-export const BACKUP_VERSION = 2;
+/*
+ * Numero di versione del file esportato.
+ *
+ *   1 — Fase 1: nessun campo `version`.
+ *   2 — Fase 2: aggiunti `coversUntil` e `label`.
+ *   3 — Fase 3: la paga oraria diventa `settings.rates`, una lista.
+ *
+ * Tutte e tre si continuano a ripristinare: un backup fatto oggi deve restare
+ * utile fra due anni.
+ */
+export const BACKUP_VERSION = 3;
 
 export const FIXED_TYPES = [
   { id: "week", name: "Full Week", days: [1, 2, 3, 4, 5, 6, 7], fixed: true },
@@ -40,6 +49,7 @@ export const MAX_TYPE_NAME = 20;
 
 const DEFAULT_SETTINGS = {
   lastTypeId: "week",
+  rates: [],
   hourlyRate: null,
   customTypes: [],
 };
@@ -70,9 +80,18 @@ function write(key, value) {
 
 export function loadSettings() {
   const stored = read(KEY_SETTINGS, {});
+  // La migrazione dalla Fase 2 avviene qui, a ogni lettura: un vecchio
+  // `hourlyRate` diventa la prima paga della lista, valida dall'inizio dei
+  // tempi. Nessuna stima cambia (vedi rates.js).
+  const rates = ratesFromSettings(stored);
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
+    rates,
+    // Resta scritto per i backup, così un telefono fermo a una versione
+    // vecchia riesce ancora a leggere il file. Non è più la verità: quella è
+    // `rates`, e nessuno nell'app legge più questo campo.
+    hourlyRate: latestAmount(rates),
     customTypes: Array.isArray(stored.customTypes)
       ? stored.customTypes.slice(0, MAX_CUSTOM_TYPES)
       : [],
@@ -80,7 +99,8 @@ export function loadSettings() {
 }
 
 export function saveSettings(settings) {
-  return write(KEY_SETTINGS, settings);
+  const rates = ratesFromSettings(settings);
+  return write(KEY_SETTINGS, { ...settings, rates, hourlyRate: latestAmount(rates) });
 }
 
 /** Tutti i tipi disponibili: i due fissi più i personalizzati validi. */
@@ -283,11 +303,15 @@ export function applyBackup(parsed) {
   if (current) saveCurrentWeek(current);
 
   const device = loadSettings();
+  // Un file di Fase 1 o 2 porta un solo `hourlyRate`: ratesFromSettings lo
+  // trasforma nella prima paga della lista. Una lista già presente nel file
+  // vince su quella; se il file non ne ha nessuna, resta quella del telefono —
+  // una paga impostata non viene mai azzerata da un file che non ce l'ha.
+  const fromFile = ratesFromSettings(parsed.settings);
   saveSettings({
     ...device,
     ...parsed.settings,
-    // Una paga già impostata non viene mai azzerata da un file che non ce l'ha.
-    hourlyRate: parsed.settings.hourlyRate ?? device.hourlyRate,
+    rates: fromFile.length > 0 ? fromFile : device.rates,
     customTypes: Array.isArray(parsed.settings.customTypes)
       ? parsed.settings.customTypes.slice(0, MAX_CUSTOM_TYPES)
       : device.customTypes,
