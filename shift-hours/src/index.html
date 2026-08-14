@@ -29,6 +29,9 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
         This week
       </button>
+      <button class="sh-iconbtn" type="button" id="open-calendar" aria-label="Calendar">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
+      </button>
       <button class="sh-iconbtn" type="button" id="open-history" aria-label="History">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>
       </button>
@@ -98,6 +101,22 @@
     </header>
     <div class="sh-panel__body">
       <div class="sh-group" id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Calendario -->
+<div class="sh-layer" id="calendar-layer" hidden>
+  <div class="sh-panel">
+    <header class="sh-panel__head">
+      <span class="sh-panel__title">Calendar</span>
+      <button class="sh-iconbtn" type="button" data-close="calendar-layer" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="sh-panel__body">
+      <div class="sh-cal" id="calendar"></div>
+      <p class="sh-group__note" id="calendar-note"></p>
     </div>
   </div>
 </div>

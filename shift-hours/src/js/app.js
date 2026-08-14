@@ -52,10 +52,20 @@ import {
 } from "./storage.js";
 
 import { pendingBackup } from "./backup.js";
-import { holidayName, isHoliday } from "./holidays.js";
+import { holidayName } from "./holidays.js";
+
+import {
+  monthGrid,
+  monthOf,
+  monthRange,
+  monthTitle,
+  monthsBetween,
+  payByDay,
+} from "./calendar.js";
 
 import {
   formatMoney,
+  formatMoneyRounded,
   rateOn,
   validUntil,
   weekPay,
@@ -147,6 +157,7 @@ function render() {
   // toggleAttribute e non .hidden: su un elemento SVG la proprietà non esiste.
   el("type-caret").toggleAttribute("hidden", Boolean(viewing));
   el("back-to-current").hidden = !viewing;
+  el("open-calendar").hidden = Boolean(viewing);
   el("open-history").hidden = Boolean(viewing);
   el("open-settings").hidden = Boolean(viewing);
 
@@ -414,6 +425,64 @@ function chooseType(typeId) {
   openDay = null;
   closeSheets();
   render();
+}
+
+/* ── Calendario ───────────────────────────────────────────────────── */
+
+function openCalendar() {
+  const weeks = allWeeks();
+  const rates = settings.rates;
+  const byDay = payByDay(weeks, rates);
+  const { first, last } = monthRange(weeks);
+
+  el("calendar").innerHTML = monthsBetween(first, last).map((month) =>
+    monthMarkup(month, byDay)
+  ).join("");
+
+  el("calendar-note").textContent = rates.length
+    ? "Bank holidays are circled in yellow and count double."
+    : "Add your hourly rate to see what each day earned.";
+
+  el("calendar-layer").hidden = false;
+
+  // Si apre sul mese in corso, non sul primo del 2025: è quello che le
+  // interessa, e da lì scorre indietro quanto vuole.
+  const now = el("calendar").querySelector(`[data-month="${monthOf(toISODate(new Date()))}"]`);
+  if (now) now.scrollIntoView({ block: "start" });
+}
+
+function monthMarkup(month, byDay) {
+  const cells = monthGrid(month, byDay)
+    .map((cell) => {
+      if (!cell) return '<div class="sh-cal__day sh-cal__day--empty"></div>';
+
+      const classes = ["sh-cal__day"];
+      if (cell.holiday) classes.push("sh-cal__day--holiday");
+      if (cell.today) classes.push("sh-cal__day--today");
+
+      const label = [
+        formatDayMonth(fromISODate(cell.date)),
+        cell.holiday,
+        cell.pay ? `${formatMoneyRounded(cell.pay)} earned` : null,
+      ].filter(Boolean).join(", ");
+
+      return `
+        <div class="${classes.join(" ")}"${cell.heat === null ? "" : ` data-heat="${cell.heat}"`}
+             role="img" aria-label="${escapeHtml(label)}">
+          <span class="sh-cal__num">${cell.day}</span>
+          ${cell.pay ? `<span class="sh-cal__pay">${formatMoneyRounded(cell.pay)}</span>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <section class="sh-cal__month" data-month="${month}">
+      <h2 class="sh-cal__title">${monthTitle(month)}</h2>
+      <div class="sh-cal__weekdays" aria-hidden="true">
+        ${DAY_INITIALS.map((d) => `<span>${d}</span>`).join("")}
+      </div>
+      <div class="sh-cal__grid">${cells}</div>
+    </section>`;
 }
 
 /* ── Impostazioni ─────────────────────────────────────────────────── */
@@ -839,6 +908,7 @@ function bindEvents() {
   el("open-types").addEventListener("click", openTypeSheet);
   el("open-settings").addEventListener("click", openSettings);
   el("open-history").addEventListener("click", openHistory);
+  el("open-calendar").addEventListener("click", openCalendar);
   el("back-to-current").addEventListener("click", backToCurrent);
   el("clear-week").addEventListener("click", clearWeek);
   el("delete-week").addEventListener("click", deleteWeek);

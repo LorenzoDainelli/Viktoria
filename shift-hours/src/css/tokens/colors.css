@@ -47,9 +47,35 @@
      informazione. Nessun giallo che sembri giallo ci arriva — il primo che
      passa è un bronzo che si confonde con l'arancione qui sotto. Rischio noto
      e accettato: la stessa informazione compare anche nel calendario, dove il
-     cerchio è più grande, e il pallino ha comunque un nome accessibile. */
+     cerchio è più grande, e il pallino ha comunque un nome accessibile.
+
+     Lo stesso giallo fa da anello attorno al numero nel calendario. Misurato
+     sui sei gradini della sfumatura: 1.3 · 1.1 · 1.5 · 2.3 · 3.5 · 5.3 :1.
+     Passa la soglia solo sui due gradini scuri — che però sono quelli su cui
+     un festivo lavorato finisce quasi sempre, valendo il doppio. Su un festivo
+     NON lavorato la casella è bianca e l'anello quasi non si vede: è il caso
+     debole, ed è noto. */
   --sh-holiday: #ffd60a;
   --sh-holiday-ink: #6b4b00;    /* 8.0:1 su bianco, 7.4:1 su --sh-surface — per il testo, non per il pallino */
+
+  /* Calendario: sei gradini dal quasi bianco al blu pieno, in base a quanto ha
+     guadagnato quel giorno. Sono valori fissi e non un calcolo a tempo di
+     esecuzione, così il contrasto del testo sopra è garantito per costruzione:
+     accanto a ogni gradino c'è l'inchiostro da usarci, già verificato.
+     Il salto dal testo scuro al bianco cade fra il gradino 3 e il 4. */
+  --sh-heat-0: #f2f6ff;
+  --sh-heat-1: #c7d3f4;
+  --sh-heat-2: #9cb0e9;
+  --sh-heat-3: #718ddf;
+  --sh-heat-4: #466ad4;
+  --sh-heat-5: #1b47c9;
+
+  --sh-heat-ink-0: #0b0f19;     /* 17.7:1 su --sh-heat-0 */
+  --sh-heat-ink-1: #0b0f19;     /* 12.8:1 */
+  --sh-heat-ink-2: #0b0f19;     /*  8.9:1 */
+  --sh-heat-ink-3: #0b0f19;     /*  6.0:1 */
+  --sh-heat-ink-4: #ffffff;     /*  4.9:1 */
+  --sh-heat-ink-5: #ffffff;     /*  7.5:1 */
 
   --sh-warn: #a34a00;           /* 5.9:1 su bianco, 5.9:1 col bianco sopra */
   --sh-warn-pressed: #843c00;
