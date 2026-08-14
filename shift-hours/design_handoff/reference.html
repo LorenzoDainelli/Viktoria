@@ -50,6 +50,18 @@
   }
   .frame .sh-app,
   .frame .sh-panel { height: 100%; }
+
+  /* I fogli e lo scurimento vivono in `position: fixed` a tutto schermo.
+     Per mostrarli come campione servono un ritaglio e un riferimento locale,
+     altrimenti coprirebbero la pagina intera. L'animazione d'entrata è spenta
+     nei campioni: qui si guarda lo stato fermo. */
+  .sheetbox {
+    position: relative;
+    height: 260px;
+    overflow: hidden;
+    border-radius: var(--sh-radius-lg);
+    background: var(--sh-primary-softer);
+  }
 </style>
 </head>
 <body>
@@ -188,10 +200,88 @@
     </div>
 
     <div class="specimen">
-      <div class="specimen__label">Conferma prima di ripristinare (compare dal basso) — dice sempre cosa sta per rimettere dentro</div>
-      <p class="sh-sheet__title">This backup ends on 30 August and has 14 weeks. Restore it?</p>
-      <button class="sh-btn" type="button">Restore</button>
-      <button class="sh-btn sh-btn--ghost" type="button">Cancel</button>
+      <div class="specimen__label">Foglio di scelta — sale dal bordo basso, dove sta il pollice, sopra lo scurimento</div>
+      <div class="sheetbox">
+        <div class="sh-scrim" style="position:absolute"></div>
+        <div class="sh-sheet" style="position:absolute; animation:none">
+          <div class="sh-sheet__grip"></div>
+          <div class="sh-group">
+            <button class="sh-sheet__option" type="button" aria-selected="true">
+              <span>Week</span><span class="sh-sheet__days">Mon – Sun</span>
+            </button>
+            <button class="sh-sheet__option" type="button" aria-selected="false">
+              <span>Weekend</span><span class="sh-sheet__days">Sat – Sun</span>
+            </button>
+            <button class="sh-sheet__option" type="button" aria-selected="false">
+              <span>☕ Mornings</span><span class="sh-sheet__days">Mon · Wed · Fri</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Conferme — dicono sempre cosa sta per succedere, coi numeri dentro. Il rifiuto è umano: «Keep it», non «Annulla»</div>
+      <div class="sheetbox">
+        <div class="sh-scrim" style="position:absolute"></div>
+        <div class="sh-sheet" style="position:absolute; animation:none">
+          <div class="sh-sheet__grip"></div>
+          <p class="sh-sheet__title">This backup ends on 30 August and has 14 weeks. Restore it?</p>
+          <button class="sh-btn" type="button">Restore</button>
+          <button class="sh-btn sh-btn--ghost" type="button">Keep it</button>
+        </div>
+      </div>
+      <div class="sheetbox">
+        <div class="sh-scrim" style="position:absolute"></div>
+        <div class="sh-sheet" style="position:absolute; animation:none">
+          <div class="sh-sheet__grip"></div>
+          <p class="sh-sheet__title">Delete week ending 9 August?</p>
+          <button class="sh-btn sh-btn--danger" type="button">Delete</button>
+          <button class="sh-btn sh-btn--ghost" type="button">Keep it</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Torna alla settimana in corso — compare nella testata solo mentre guarda una settimana passata</div>
+      <button class="sh-chip" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        This week
+      </button>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Campi di testo — la paga col prefisso, il nome di un tipo di settimana</div>
+      <div class="sh-group">
+        <div class="sh-row">
+          <span class="sh-row__label">Hourly rate</span>
+          <span class="sh-rate">
+            <span class="sh-rate__currency">€</span>
+            <input class="sh-row__input" type="text" inputmode="decimal" value="10.20" aria-label="Hourly rate">
+          </span>
+        </div>
+        <div class="sh-row">
+          <span class="sh-row__label">Hourly rate</span>
+          <span class="sh-rate">
+            <span class="sh-rate__currency">€</span>
+            <input class="sh-row__input" type="text" inputmode="decimal" placeholder="—" aria-label="Hourly rate">
+          </span>
+        </div>
+      </div>
+      <div class="sh-row sh-row--stacked">
+        <div style="display:flex; align-items:center; gap: var(--sh-space-2)">
+          <input class="sh-typename" type="text" maxlength="20" value="☕ Mornings"
+                 aria-label="Week type name" placeholder="Name">
+          <span class="sh-iconbtn sh-iconbtn--plain" role="button" aria-label="Delete">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="specimen">
+      <div class="specimen__label">Storico vuoto — spiega cosa comparirà, non si scusa</div>
+      <p class="sh-empty">Your past weeks will show up here, one for each week you fill in.</p>
     </div>
 
     <div class="specimen">
@@ -203,7 +293,17 @@
     </div>
 
     <div class="specimen">
-      <div class="specimen__label">Notifiche non bloccanti</div>
+      <div class="specimen__label">Notifiche non bloccanti — arrivano in fondo, sopra la barra d'azione, e se ne vanno da sole</div>
+      <div class="sheetbox" style="height:150px">
+        <div class="sh-toasts" style="position:absolute">
+          <div class="sh-toast">
+            <span class="sh-toast__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
+            </span>
+            Copied
+          </div>
+        </div>
+      </div>
       <div class="sh-toast">
         <span class="sh-toast__icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
@@ -252,6 +352,14 @@
     </div>
 
   </div>
+
+  <p>
+    Due classi non hanno un campione, di proposito: <code>sh-layer</code> è il
+    velo bianco a tutto schermo su cui poggiano storico e impostazioni — qui le
+    schermate intere lo mostrano già — e <code>sh-toast--leaving</code> è il
+    fotogramma di uscita di una notifica, che in un'immagine ferma non esiste.
+    Tutto il resto del foglio componenti è qui sopra.
+  </p>
 
   <h2>Le schermate</h2>
   <p>
@@ -620,7 +728,10 @@ Saturday: 8:30 - 17:00 8.30 hrs
               <span class="sh-group__label">Pay</span>
               <div class="sh-row">
                 <span class="sh-row__label">Hourly rate</span>
-                <input class="sh-row__input" type="text" inputmode="decimal" placeholder="—" aria-label="Hourly rate">
+                <span class="sh-rate">
+                  <span class="sh-rate__currency">€</span>
+                  <input class="sh-row__input" type="text" inputmode="decimal" placeholder="—" aria-label="Hourly rate">
+                </span>
               </div>
               <p class="sh-group__note">Leave it empty to hide estimated pay.</p>
             </div>
@@ -636,8 +747,9 @@ Saturday: 8:30 - 17:00 8.30 hrs
                 <span class="sh-row__value">Sat – Sun</span>
               </div>
               <div class="sh-row sh-row--stacked">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--sh-space-3)">
-                  <span class="sh-row__label">☕ Mornings</span>
+                <div style="display:flex; align-items:center; gap: var(--sh-space-2)">
+                  <input class="sh-typename" type="text" maxlength="20" value="☕ Mornings"
+                         aria-label="Week type name" placeholder="Name">
                   <span class="sh-iconbtn sh-iconbtn--plain" role="button" aria-label="Delete">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
                   </span>

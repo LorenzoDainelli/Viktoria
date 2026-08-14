@@ -439,12 +439,30 @@ completa e usabile, e si può decidere di fermarsi lì.
 
 #### Task 0 — Rimettere in pari `reference.html`
 - **File:** `design_handoff/reference.html`.
-- **Perché:** è rimasto indietro dalla Fase 2 — non mostra l'avviso arancione,
-  la riga di stato delle impostazioni né la conferma di ripristino. È il
-  documento su cui si approva la grafica, quindi va allineato **prima** di
-  aggiungerci roba nuova.
-- **Criteri:** mostra tutti i componenti esistenti e le tre schermate intere a
-  390px, avviso di backup compreso, con dati inventati.
+- **Perché:** è il documento su cui si approva la grafica, quindi va allineato
+  **prima** di aggiungerci roba nuova. La Fase 2 c'è già dentro (avviso
+  arancione, riga di stato, conferma di ripristino). Mancano invece **cinque
+  componenti che esistono nell'app e non compaiono qui**, e due punti in cui il
+  documento **non corrisponde più al codice**.
+- **Cosa manca:**
+  - `sh-chip` — il pulsante `This week`, mai mostrato. È quello che il Task 1
+    deve vestire: senza un campione qui, non c'è niente da approvare.
+  - `sh-rate` / `sh-rate__currency` — il prefisso `€` del campo della paga.
+  - `sh-typename` — il campo per dare il nome a un tipo di settimana.
+  - `sh-empty` — lo storico quando è vuoto.
+  - `sh-scrim` e il foglio vero: oggi la conferma è testo sciolto
+    (`sh-sheet__title` senza `.sh-sheet` attorno), non un foglio che sale.
+- **Cosa è fuori sincrono:**
+  - nella schermata impostazioni il campo della paga è un `input` nudo, mentre
+    l'app ha il prefisso `€`;
+  - la conferma dice `Cancel`, l'app dice `Keep it`.
+- **Criteri:**
+  - I cinque componenti hanno un campione, con il markup **identico a quello che
+    l'app produce davvero** (verificato contro `src/index.html` e `src/js/app.js`,
+    non a memoria).
+  - I due punti fuori sincrono sono allineati.
+  - Le quattro schermate intere si aprono a 390px senza scorrimento orizzontale.
+  - Dati inventati.
 
 #### Task 1 — `sh-chip`
 - **File:** `design_handoff/components.css`, `design_handoff/reference.html`,

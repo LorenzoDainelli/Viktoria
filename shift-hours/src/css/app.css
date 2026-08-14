@@ -1,6 +1,12 @@
 /* Shift Hours — regole di layout specifiche dell'app.
  * Qui sta solo ciò che riguarda questa applicazione, non il sistema visivo:
  * i componenti riutilizzabili vivono in components.css.
+ *
+ * Fase 3: .sh-rate, .sh-typename e .sh-empty stavano qui e sono stati spostati
+ * in components.css, dove dice questo commento. Erano componenti a tutti gli
+ * effetti, e finché stavano in questo file non comparivano in reference.html —
+ * che carica components.css e non app.css — quindi non erano approvabili né
+ * visibili a chi lavora alla grafica.
  */
 
 /* L'app occupa esattamente la finestra: niente scorrimento della pagina,
@@ -9,38 +15,3 @@ html, body { height: 100%; overflow: hidden; }
 
 /* Vale su tutto: i componenti a comparsa usano flex e sovrascriverebbero hidden. */
 [hidden] { display: none !important; }
-
-/* Il campo della paga oraria affiancato al simbolo di valuta */
-.sh-rate {
-  display: flex;
-  align-items: center;
-  gap: var(--sh-space-2);
-}
-
-.sh-rate__currency {
-  font-size: var(--sh-size-md);
-  font-weight: var(--sh-weight-semibold);
-  color: var(--sh-text-muted);
-}
-
-/* Nome modificabile di un tipo di settimana personalizzato */
-.sh-typename {
-  flex: 1;
-  min-width: 0;
-  padding: var(--sh-space-2) var(--sh-space-3);
-  border-radius: var(--sh-radius-sm);
-  background: var(--sh-bg);
-  font-size: var(--sh-size-md);
-  font-weight: var(--sh-weight-medium);
-}
-
-/* Messaggio quando la settimana è ancora vuota */
-.sh-empty {
-  margin: 0;
-  padding: var(--sh-space-5);
-  border-radius: var(--sh-radius-md);
-  background: var(--sh-surface);
-  color: var(--sh-text-muted);
-  font-size: var(--sh-size-sm);
-  text-align: center;
-}
