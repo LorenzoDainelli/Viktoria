@@ -1,10 +1,20 @@
-# Icona versione 2 — l'insegna del bar
+# Icona versione 2 — l'insegna del bar (di scorta)
 
 `originale.jpeg` è l'immagine che ha mandato Lorenzo il 14 agosto 2026:
 l'insegna del bar dove lavora Viktoria, resa come orologio da parete.
 2048×2048, generata con Gemini.
 
-Da qui nascono le due icone in `src/icons/`.
+È stata l'icona dell'app per un giorno solo: il 15 agosto Viktoria ne ha
+scelta un'altra, che è in `../icons-v3/`. `icon-192.png` e `icon-512.png`
+qui accanto sono i file esatti che erano pubblicati, tenuti di scorta.
+Per rimetterli in servizio si ricopiano in `src/icons/`:
+
+```sh
+cp shift-hours/icons-v2/icon-192.png shift-hours/src/icons/icon-192.png
+cp shift-hours/icons-v2/icon-512.png shift-hours/src/icons/icon-512.png
+```
+
+Sotto è scritto come erano state ricavate dall'originale.
 
 ## Come sono state ricavate
 
@@ -65,4 +75,5 @@ alla home ha un archivio suo, separato da Safari. Quindi prima di
 toglierla va scaricato il backup dalle impostazioni, e dopo averla
 rimessa va ricaricato.
 
-La versione precedente dell'icona è in `../icons-v1/`.
+La versione precedente dell'icona è in `../icons-v1/`, quella in servizio
+adesso in `../icons-v3/`.
