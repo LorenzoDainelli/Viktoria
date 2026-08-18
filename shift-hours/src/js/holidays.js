@@ -133,3 +133,32 @@ export function isHoliday(iso) {
 export function payMultiplier(iso) {
   return isHoliday(iso) ? HOLIDAY_MULTIPLIER : 1;
 }
+
+/**
+ * La prossima festa da una certa data, quella di oggi compresa.
+ *
+ * Cerca nell'anno della data e, se sono finite, nel successivo: a Natale
+ * passato il prossimo bank holiday è il Capodanno dell'anno dopo, e senza il
+ * secondo giro la pillola sparirebbe per una settimana ogni dicembre.
+ *
+ * I giorni si contano fra due mezzenotte locali, non fra due istanti: alle
+ * 23:00 della vigilia deve dire "uno", non "zero", e l'ora legale irlandese
+ * non deve poter spostare il conto di un giorno. Per questo si azzerano le
+ * ore prima di sottrarre.
+ *
+ * @param {Date} [today]
+ * @returns {{date: string, name: string, days: number}|null}
+ */
+export function nextHoliday(today = new Date()) {
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const iso = toISODate(midnight);
+  const year = midnight.getFullYear();
+
+  const upcoming = [...holidaysOfYear(year), ...holidaysOfYear(year + 1)]
+    .find((h) => h.date >= iso);
+  if (!upcoming) return null;
+
+  const [y, m, d] = upcoming.date.split("-").map(Number);
+  const days = Math.round((new Date(y, m - 1, d) - midnight) / 86400000);
+  return { date: upcoming.date, name: upcoming.name, days };
+}

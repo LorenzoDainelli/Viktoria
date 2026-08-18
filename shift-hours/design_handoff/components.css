@@ -1099,6 +1099,82 @@ button { cursor: pointer; touch-action: manipulation; }
 
 /* ── 14. Calendario ───────────────────────────────────────────────── */
 
+/* La pillola del prossimo bank holiday, in mezzo alla testata del calendario.
+ *
+ * Veste i colori di quello che dice: il fondo e il grigio della scritta sono
+ * quelli dei pulsanti tondi della testata (4.9:1, passa), l'anello e l'alone
+ * sono il giallo delle feste. Nessun colore nuovo.
+ *
+ * Il giro è un gradiente conico dentro un quadrato che ruota, ritagliato al
+ * solo bordo dall'`overflow: hidden` della pillola. Il quadrato è largo il
+ * 190% della pillola, così girando copre sempre tutti e quattro gli angoli.
+ * Niente immagini, niente librerie, e gira sulla scheda video: durante
+ * l'animazione non si ridisegna niente del calendario sotto.
+ */
+.sh-hpill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;                     /* più bassa dei 44px dei pulsanti: è
+                                       un'informazione, non un attrezzo */
+  padding: 0 13px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-xs);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+  flex: none;
+  box-shadow: 0 0 14px rgba(255, 214, 10, 0.42);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-hpill:active { background: var(--sh-surface-strong); }
+
+.sh-hpill__text { position: relative; z-index: 2; }
+
+.sh-hpill__ring {
+  position: absolute;
+  inset: -2px;                      /* lo spessore dell'anello */
+  border-radius: var(--sh-radius-pill);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sh-hpill__ring::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 190%;
+  aspect-ratio: 1;
+  background: conic-gradient(transparent 0deg 245deg, var(--sh-holiday) 350deg, transparent 360deg);
+  animation: sh-hpill-spin 2.6s linear infinite;
+}
+
+/* Il buco in mezzo: ricopre il gradiente e lascia scoperto solo il bordo. */
+.sh-hpill__ring::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+}
+
+@keyframes sh-hpill-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Chi ha chiesto meno movimento non lo vede girare: resta l'anello giallo
+   pieno, che dice la stessa cosa senza muoversi. */
+@media (prefers-reduced-motion: reduce) {
+  .sh-hpill__ring::before {
+    animation: none;
+    background: var(--sh-holiday);
+  }
+}
+
 /* Un mese sotto l'altro, si scorre in verticale. È in sola lettura: qui non
    si modifica niente, si guarda com'è andato il mese. */
 .sh-cal {

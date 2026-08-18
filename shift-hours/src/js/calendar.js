@@ -155,3 +155,19 @@ export function weekStartOf(iso) {
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return toISODate(d);
 }
+
+/**
+ * Quanto manca alla prossima festa, scritto per lei.
+ *
+ * "In 1 day" è grammaticalmente giusto e suona sbagliato, quindi lo zero e
+ * l'uno hanno una parola loro. Sopra, si contano i giorni: a due mesi di
+ * distanza un numero grande non dice granché, ma è comunque più chiaro di
+ * "in 2 months", che nasconde se sono nove settimane o dieci.
+ *
+ * @param {number} days quanti giorni mancano, 0 = oggi
+ */
+export function countdownLabel(days) {
+  if (days <= 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `In ${days} days`;
+}

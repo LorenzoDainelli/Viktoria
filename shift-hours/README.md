@@ -135,6 +135,21 @@ non ci sono né colori né importi: restano i giorni e i festivi.
 
 **Il calendario non modifica niente.** Si guarda.
 
+Nella testata, fra il titolo e la X, c'è una **pillola col conto alla
+rovescia** al prossimo bank holiday: *In 69 days*, *Tomorrow*, *Today*. Ha il
+grigio dei pulsanti tondi della testata e la scritta nel grigio delle icone
+(4,9:1, passa), con attorno l'anello e l'alone gialli delle feste — nessun
+colore nuovo. Toccandola il calendario scorre fino a quel mese.
+
+Il conto si rifà a ogni apertura del calendario, non a un timer: l'unico caso
+che sfugge è l'app lasciata aperta oltre la mezzanotte. La pillola sparisce se
+il mese della festa sta fuori dal calendario, che oggi finisce a dicembre 2028:
+una pillola che non porta da nessuna parte è peggio di nessuna pillola.
+
+Il giro del bordo è un gradiente conico dentro un quadrato che ruota,
+ritagliato al solo bordo. Con `prefers-reduced-motion` si ferma e resta un
+anello giallo pieno.
+
 ## Copie di sicurezza
 
 Siccome i dati vivono solo nel telefono, se qualcuno cancella i dati dei siti

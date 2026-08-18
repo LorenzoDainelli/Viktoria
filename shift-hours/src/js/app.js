@@ -52,9 +52,10 @@ import {
 } from "./storage.js";
 
 import { pendingBackup } from "./backup.js";
-import { holidayName } from "./holidays.js";
+import { holidayName, nextHoliday } from "./holidays.js";
 
 import {
+  countdownLabel,
   monthGrid,
   monthOf,
   monthRange,
@@ -443,12 +444,49 @@ function openCalendar() {
     ? "Bank holidays are circled in yellow and count double."
     : "Add your hourly rate to see what each day earned.";
 
+  renderHolidayPill();
+
   el("calendar-layer").hidden = false;
 
   // Si apre sul mese in corso, non sul primo del 2025: è quello che le
   // interessa, e da lì scorre indietro quanto vuole.
   const now = el("calendar").querySelector(`[data-month="${monthOf(toISODate(new Date()))}"]`);
   if (now) now.scrollIntoView({ block: "start" });
+}
+
+/*
+ * La pillola con quanto manca al prossimo bank holiday.
+ *
+ * Si ricalcola a ogni apertura e non a un timer: il calendario si chiude e si
+ * riapre, un contatore che si aggiorna da solo mentre nessuno guarda sarebbe
+ * lavoro sprecato. L'unico caso che sfugge è l'app lasciata aperta oltre la
+ * mezzanotte, e lì il numero è vecchio di un giorno finché non si richiude.
+ *
+ * Sparisce se non c'è una prossima festa da mostrare, o se il suo mese sta
+ * fuori dal calendario: una pillola che non porta da nessuna parte è peggio
+ * di nessuna pillola.
+ */
+function renderHolidayPill() {
+  const pill = el("holiday-pill");
+  const next = nextHoliday();
+  const month = next && el("calendar").querySelector(`[data-month="${monthOf(next.date)}"]`);
+
+  pill.hidden = !month;
+  if (!month) return;
+
+  const label = countdownLabel(next.days);
+  el("holiday-pill-text").textContent = label;
+  // Il nome della festa non ci sta nella pillola, ma a chi la sente leggere
+  // serve: "In 69 days" da solo non dice a cosa mancano.
+  pill.setAttribute("aria-label", `${next.name}, ${label.toLowerCase()}. Show it in the calendar.`);
+  pill.dataset.month = monthOf(next.date);
+}
+
+function scrollToHolidayMonth() {
+  const month = el("calendar").querySelector(
+    `[data-month="${el("holiday-pill").dataset.month}"]`
+  );
+  if (month) month.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 function monthMarkup(month, byDay) {
@@ -909,6 +947,7 @@ function bindEvents() {
   el("open-settings").addEventListener("click", openSettings);
   el("open-history").addEventListener("click", openHistory);
   el("open-calendar").addEventListener("click", openCalendar);
+  el("holiday-pill").addEventListener("click", scrollToHolidayMonth);
   el("back-to-current").addEventListener("click", backToCurrent);
   el("clear-week").addEventListener("click", clearWeek);
   el("delete-week").addEventListener("click", deleteWeek);
