@@ -27,8 +27,6 @@ import {
   workedDays,
 } from "./week.js";
 
-import { displayWidth, noteForWeek } from "./notes.js";
-
 /**
  * @returns {string|null} il messaggio, o null se non ha lavorato nessun giorno
  */
@@ -106,18 +104,13 @@ export function buildReceipt(week, days) {
     "Total".padEnd(9) + total.padStart(width - 9),
   ];
 
-  // La frase della settimana, centrata come il titolo e staccata dal totale.
-  // Non esiste in `buildSummary()`: al capo non arriva.
-  const note = noteForWeek(week.weekStart);
-  if (note) lines.push("", padCenter(note, width));
-
   return lines.join("\n");
 }
 
-/* Centra contando le caselle occupate, non i byte: con un'emoji dentro,
- * `text.length` sbaglia in tutt'e due i versi e la frase uscirebbe storta. */
+/* Centra dentro una larghezza fissa. Vale solo perché qui dentro passa
+ * soltanto testo semplice, dove un carattere è una casella. */
 function padCenter(text, width) {
-  const left = Math.max(0, Math.floor((width - displayWidth(text)) / 2));
+  const left = Math.max(0, Math.floor((width - text.length) / 2));
   return " ".repeat(left) + text;
 }
 
