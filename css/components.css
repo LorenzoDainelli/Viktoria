@@ -1,0 +1,1271 @@
+/* Shift Hours — foglio componenti (base provvisoria, Fase 1)
+ *
+ * Usa solo i token di tokens/. Nessun colore, dimensione o durata scritti a
+ * mano qui dentro: se manca un valore, si aggiunge un token, non un numero.
+ *
+ * Impianto visivo
+ *   - superfici piene, non bordi: le card si distinguono per riempimento
+ *   - un solo blocco protagonista in cima (il totale della settimana)
+ *   - righe alte e raggi larghi, ritmo verticale regolare
+ *   - i numeri sono il contenuto: grandi, tabellari, in evidenza
+ *
+ * Indice
+ *   1. Reset e shell
+ *   2. Testata
+ *   3. Blocco riepilogo (totale + paga)
+ *   4. Riga del giorno
+ *   5. Slider orario
+ *   6. Pulsanti
+ *   7. Barra d'azione in basso
+ *   8. Avviso della copia di sicurezza
+ *   9. Anteprima del messaggio
+ *  10. Pannelli (storico, impostazioni)
+ *  11. Banner di notifica
+ *  12. Livelli, foglio di scelta, notifiche a comparsa
+ *  13. Utilità
+ *  14. Calendario
+ */
+
+/* ── 1. Reset e shell ─────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Su iPhone un tocco lento su qualunque cosa toccabile fa comparire un
+     rettangolo grigio scuro: iOS lo disegna dopo circa un decimo di secondo,
+     per questo con un tocco rapido non si vedeva. Va spento su tutto, non
+     solo sui bottoni, perché le maniglie dello slider sono <div>. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--sh-bg);
+  color: var(--sh-text);
+  font-family: var(--sh-font);
+  font-size: var(--sh-size-md);
+  line-height: var(--sh-leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+button { cursor: pointer; touch-action: manipulation; }
+
+:focus-visible {
+  outline: 3px solid var(--sh-primary);
+  outline-offset: 3px;
+  border-radius: var(--sh-radius-sm);
+}
+
+/* Testata e barra d'azione restano ferme, scorre solo la lista dei giorni */
+.sh-app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  height: 100vh;
+  height: 100dvh; /* altezza esatta, non minima: la barra in basso resta dentro */
+  margin-inline: auto;
+  background: var(--sh-bg);
+  overflow: hidden;
+}
+
+.sh-app__body {
+  min-height: 0; /* senza questo la lista spinge la barra d'azione fuori schermo */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--sh-gutter) var(--sh-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-5);
+}
+
+/* ── 2. Testata ───────────────────────────────────────────────────── */
+
+.sh-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sh-space-4);
+  padding: var(--sh-space-5) var(--sh-gutter) var(--sh-space-4);
+  padding-top: max(var(--sh-space-5), env(safe-area-inset-top));
+}
+
+.sh-header__eyebrow {
+  display: block;
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-header__title {
+  margin: var(--sh-space-1) 0 0;
+  font-size: var(--sh-size-xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tight);
+  line-height: var(--sh-leading-tight);
+}
+
+.sh-header__actions {
+  display: flex;
+  gap: var(--sh-space-2);
+  flex: none;
+}
+
+.sh-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-text-muted);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-iconbtn:active { background: var(--sh-surface-strong); }
+
+.sh-iconbtn--plain { background: none; }
+
+/* Torna alla settimana in corso. Compare nella testata solo mentre lei sta
+   guardando una settimana passata — e in quel momento è da sola, perché
+   l'app nasconde storico e impostazioni (app.js: `hidden = Boolean(viewing)`).
+   Ha la forma a pillola degli altri elementi della testata e la stessa
+   altezza dei pulsanti tondi, ma porta il colore dell'azione invece del
+   grigio: è una via d'uscita, non un attrezzo in più.
+ *
+ * Porta le parole scritte, non solo la freccia: chi la usa non è tecnica, e
+ * una freccia da sola in una testata non dice dove porta. Ci sta: il titolo
+ * più lungo («26 September») vuole 179px, i margini 56px, questa pillola
+ * 126px — in tutto 361px sui 393px dell'iPhone 15. */
+.sh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  height: var(--sh-touch-min);
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-primary);          /* 7.0:1 su --sh-surface */
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-chip:active { background: var(--sh-surface-strong); }
+
+/* Il blocco della data cede spazio invece di spingere i pulsanti fuori dallo
+   schermo: senza questo, un titolo lungo li taglia via al bordo destro. */
+.sh-header > :first-child { min-width: 0; }
+
+/* ── 3. Blocco riepilogo ──────────────────────────────────────────── */
+
+.sh-hero {
+  position: relative;
+  padding: var(--sh-space-5) var(--sh-space-6);
+  border-radius: var(--sh-radius-lg);
+  background: linear-gradient(140deg, var(--sh-hero-from), var(--sh-hero-to));
+  color: var(--sh-on-hero);
+  box-shadow: var(--sh-shadow-hero);
+}
+
+.sh-hero__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  margin-bottom: var(--sh-space-4);
+}
+
+.sh-hero__label {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-on-hero-muted);
+}
+
+/* Selettore del tipo di settimana: sta nel blocco, non ruba una riga */
+.sh-typepill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  height: 36px;
+  padding: 0 var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: hsl(0 0% 100% / 0.16);
+  color: var(--sh-on-hero);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+}
+
+.sh-typepill:active { background: hsl(0 0% 100% / 0.26); }
+
+.sh-hero__total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sh-space-2);
+  font-size: var(--sh-size-3xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tighter);
+  line-height: var(--sh-leading-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-hero__unit {
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: normal;
+  color: var(--sh-on-hero-muted);
+}
+
+.sh-hero__meta {
+  margin-top: var(--sh-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+  font-size: var(--sh-size-sm);
+  color: var(--sh-on-hero-muted);
+}
+
+.sh-hero__pay {
+  color: var(--sh-on-hero);
+  font-weight: var(--sh-weight-semibold);
+}
+
+/* ── 4. Riga del giorno ───────────────────────────────────────────── */
+
+.sh-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+}
+
+.sh-day {
+  position: relative; /* la ✕ è posizionata sopra, così non sta dentro il tocco */
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-day--filled { background: var(--sh-primary-soft); }
+
+.sh-day--open {
+  background: var(--sh-bg);
+  box-shadow: var(--sh-shadow-md);
+  border-radius: var(--sh-radius-lg);
+}
+
+.sh-day__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  width: 100%;
+  min-height: var(--sh-row-height);
+  padding-inline: var(--sh-space-5);
+  text-align: left;
+}
+
+/* spazio per la ✕ solo dove la ✕ c'è */
+.sh-day--filled > .sh-day__head,
+.sh-day--open > .sh-day__head {
+  padding-inline-end: calc(var(--sh-touch-min) + var(--sh-space-2));
+}
+
+.sh-day__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-day:not(.sh-day--filled) .sh-day__name { color: var(--sh-text-muted); }
+
+/* Pallino del giorno di oggi */
+.sh-day__today {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary);
+  flex: none;
+}
+
+/* Bank holiday: stesso pallino di oggi, giallo, ma a destra del nome invece
+   che a sinistra. Un giorno può averli entrambi. Compare anche nei giorni non
+   lavorati: serve a sapere in anticipo che lunedì prossimo è festa. */
+.sh-day__holiday {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-holiday);
+  flex: none;
+}
+
+.sh-day__value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: var(--sh-leading-snug);
+}
+
+.sh-day__hours {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-bold);
+  color: var(--sh-primary-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-day__times {
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Giorno vuoto: un + invita al tocco, nessuna scritta tecnica */
+.sh-day__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-medium);
+}
+
+/* La ✕ compare solo sui giorni impostati */
+.sh-day__clear {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: var(--sh-space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sh-touch-min);
+  height: var(--sh-row-height);
+  border-radius: var(--sh-radius-pill);
+  color: var(--sh-primary-ink);
+  opacity: 0.55;
+}
+
+.sh-day__clear:active {
+  opacity: 1;
+  background: var(--sh-danger-soft);
+  color: var(--sh-danger);
+}
+
+/* Corpo che si apre dentro la riga: nessun cambio di schermata */
+.sh-day__panel {
+  padding: var(--sh-space-2) var(--sh-space-5) var(--sh-space-5);
+}
+
+/* ── 5. Slider orario ─────────────────────────────────────────────── */
+
+.sh-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-4);
+  /* Tenendo premuta una maniglia, iOS proverebbe a selezionare gli orari
+     scritti sopra (alone scuro + lente d'ingrandimento). Qui non c'è niente
+     da copiare: il messaggio si seleziona nella sua schermata. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sh-range__readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sh-space-3);
+  font-size: var(--sh-size-2xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tighter);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-range__arrow { color: var(--sh-text-faint); font-weight: var(--sh-weight-regular); }
+
+.sh-range__duration {
+  text-align: center;
+  margin-top: calc(var(--sh-space-3) * -1);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-range__track {
+  position: relative;
+  height: var(--sh-handle-hit);
+  display: flex;
+  align-items: center;
+}
+
+.sh-range__rail {
+  position: absolute;
+  inset-inline: 0;
+  height: var(--sh-rail-height);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface-strong);
+}
+
+.sh-range__fill {
+  position: absolute;
+  height: var(--sh-rail-height);
+  border-radius: var(--sh-radius-pill);
+  background: linear-gradient(90deg, var(--sh-hero-from), var(--sh-hero-to));
+}
+
+.sh-range__handle {
+  position: absolute;
+  width: var(--sh-handle-hit);
+  height: var(--sh-handle-hit);
+  margin-inline-start: calc(var(--sh-handle-hit) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.sh-range__handle::before {
+  content: "";
+  width: var(--sh-handle-size);
+  height: var(--sh-handle-size);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  box-shadow: 0 0 0 3px var(--sh-primary), var(--sh-shadow-md);
+  transition: transform var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-range__handle:active::before { transform: scale(1.12); }
+
+/* Le ore sotto la barra sono posizionate in percentuale, non distribuite:
+   devono cadere esattamente sopra il punto che indicano. */
+.sh-range__scale {
+  position: relative;
+  height: 1.2em;
+  margin-top: calc(var(--sh-space-3) * -1);
+  font-size: var(--sh-size-2xs);
+  color: var(--sh-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-range__scale > span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+/* Regolazione fine: due gruppi − / +, uno per l'inizio e uno per la fine */
+.sh-nudges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sh-space-3);
+}
+
+.sh-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-1);
+  padding: var(--sh-space-1);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+}
+
+.sh-nudge__label {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-nudge__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-primary);
+  font-size: var(--sh-size-lg);
+  font-weight: var(--sh-weight-semibold);
+  box-shadow: var(--sh-shadow-sm);
+}
+
+.sh-nudge__btn:active { background: var(--sh-primary-soft); }
+
+/* ── 6. Pulsanti ──────────────────────────────────────────────────── */
+
+.sh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sh-space-2);
+  width: 100%;
+  min-height: 54px;
+  padding: 0 var(--sh-space-6);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-primary);
+  color: var(--sh-on-primary);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+  box-shadow: var(--sh-shadow-md);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-btn:active { background: var(--sh-primary-pressed); }
+
+.sh-btn--secondary {
+  background: var(--sh-surface);
+  color: var(--sh-primary);
+  box-shadow: none;
+}
+
+.sh-btn--secondary:active { background: var(--sh-surface-strong); }
+
+.sh-btn--danger {
+  background: var(--sh-danger-soft);
+  color: var(--sh-danger);
+  box-shadow: none;
+}
+
+.sh-btn--ghost {
+  background: none;
+  color: var(--sh-text-muted);
+  box-shadow: none;
+  min-height: var(--sh-touch-min);
+  font-weight: var(--sh-weight-medium);
+}
+
+.sh-btn[disabled],
+.sh-btn--disabled {
+  background: var(--sh-disabled-bg);
+  color: var(--sh-disabled-text);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ── 7. Barra d'azione in basso ───────────────────────────────────── */
+
+.sh-actionbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+  padding: var(--sh-space-4) var(--sh-gutter);
+  padding-bottom: max(var(--sh-space-4), env(safe-area-inset-bottom));
+  background: var(--sh-bg);
+  box-shadow: var(--sh-shadow-bar);
+}
+
+.sh-actionbar__hint {
+  text-align: center;
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+}
+
+/* ── 8. Avviso della copia di sicurezza (Fase 2) ───────────────────── */
+
+/* Sta fra i giorni e l'anteprima: sulla strada che lei percorre ogni domenica
+   per copiare le ore. Non ha una ✕ — se ne va solo quando il salvataggio è
+   davvero avvenuto (PIANO-FASE-2.md, regola 2). */
+.sh-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-4);
+  padding: var(--sh-space-3) var(--sh-space-3) var(--sh-space-3) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-warn-soft);
+}
+
+.sh-alert__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-1);
+}
+
+.sh-alert__title {
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-warn-ink);
+}
+
+.sh-alert__note {
+  font-size: var(--sh-size-xs);
+  line-height: var(--sh-leading-snug);
+  color: var(--sh-warn-ink-muted);
+}
+
+/* Cerchio pieno: è l'unica cosa da toccare, deve leggersi come un pulsante */
+.sh-alert__btn {
+  flex: none;
+  width: var(--sh-touch-min);
+  height: var(--sh-touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-warn);
+  color: var(--sh-on-warn);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease),
+              transform var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-alert__btn:active {
+  background: var(--sh-warn-pressed);
+  transform: scale(0.94);
+}
+
+/* Riga di stato nelle impostazioni: "Last backup: August26 — 2 September".
+   Quando non c'è mai stata una copia, si tinge d'arancione. */
+.sh-group__note--warn {
+  color: var(--sh-warn-ink);
+  font-weight: var(--sh-weight-semibold);
+}
+
+/* ── 9. Anteprima del messaggio ───────────────────────────────────── */
+
+/* Fumetto: quello che legge è esattamente quello che incollerà */
+.sh-preview { display: flex; flex-direction: column; gap: var(--sh-space-2); }
+
+.sh-preview__label {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+/* Lo scontrino. Le colonne che src/js/summary.js incolonna con gli spazi
+   reggono solo a spaziatura fissa: qui il monospazio non è un vezzo, è quello
+   che tiene in riga i numeri. A 14px i 35 caratteri stanno dentro un iPhone 15
+   senza scorrimento — `white-space: pre` e non `pre-wrap`, perché una riga
+   mandata a capo distruggerebbe l'incolonnamento. */
+/* Lo strappo sopra e sotto è disegnato come sfondo dell'elemento, non con
+   ::before e ::after: quelli andrebbero posizionati fuori dal riquadro, e
+   `overflow-x: auto` — che serve da rete di sicurezza se un giorno il testo
+   diventasse più largo — li ritaglierebbe via senza dire niente.
+ *
+ * Tre strati: la merlatura in cima, quella in fondo, e la carta piena in
+ * mezzo. Passo 14px con raggio 6.5: più largo sembra una tenda da sole, più
+ * stretto non si legge e pare un bordo sbagliato. Le tacche sono trasparenti,
+ * quindi lasciano vedere lo sfondo della schermata. */
+.sh-preview__bubble {
+  margin: 0;
+  /* Lo spazio verticale tiene conto dei 7px di merlatura sopra e sotto. */
+  padding: calc(var(--sh-space-5) + 7px) var(--sh-space-5);
+  background:
+    radial-gradient(circle at 7px 0, transparent 6.5px, var(--sh-surface) 7px)
+      top / 14px 7px repeat-x,
+    radial-gradient(circle at 7px 7px, transparent 6.5px, var(--sh-surface) 7px)
+      bottom / 14px 7px repeat-x,
+    linear-gradient(var(--sh-surface), var(--sh-surface))
+      center / 100% calc(100% - 14px) no-repeat;
+  color: var(--sh-text);
+  font-family: var(--sh-mono);
+  font-size: var(--sh-size-mono);
+  line-height: var(--sh-leading-normal);
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ── 10. Pannelli ──────────────────────────────────────────────────── */
+
+.sh-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  height: 100vh;
+  height: 100dvh;
+  margin-inline: auto;
+  background: var(--sh-bg);
+  overflow: hidden;
+}
+
+.sh-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-4);
+  padding: var(--sh-space-5) var(--sh-gutter) var(--sh-space-4);
+  padding-top: max(var(--sh-space-5), env(safe-area-inset-top));
+}
+
+.sh-panel__title {
+  font-size: var(--sh-size-xl);
+  font-weight: var(--sh-weight-bold);
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-panel__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--sh-gutter) var(--sh-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-3);
+}
+
+.sh-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+}
+
+.sh-group__label {
+  padding-inline-start: var(--sh-space-2);
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sh-text-muted);
+}
+
+.sh-group__note {
+  margin: 0;
+  padding-inline-start: var(--sh-space-2);
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+}
+
+/* Riga dello storico */
+.sh-histrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-4);
+  width: 100%;
+  padding: var(--sh-space-4) var(--sh-space-4) var(--sh-space-4) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  text-align: left;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-histrow:active { background: var(--sh-surface-strong); }
+
+.sh-histrow__main { flex: 1; min-width: 0; }
+
+.sh-histrow__week {
+  display: block;
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-histrow__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+}
+
+.sh-histrow__hours {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-bold);
+  color: var(--sh-primary-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-histrow__chevron { color: var(--sh-text-faint); flex: none; }
+
+/* Righe delle impostazioni */
+.sh-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-4);
+  min-height: 60px;
+  padding: var(--sh-space-3) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+}
+
+.sh-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sh-space-3);
+  padding-block: var(--sh-space-4);
+}
+
+.sh-row__label { font-size: var(--sh-size-md); font-weight: var(--sh-weight-medium); }
+
+.sh-row__value { font-size: var(--sh-size-sm); color: var(--sh-text-muted); }
+
+.sh-row__input {
+  width: 6.5em;
+  padding: var(--sh-space-2) var(--sh-space-4);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-text);
+  font-size: var(--sh-size-md); /* mai sotto 16px: Safari zoomerebbe */
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.sh-row__input::placeholder { color: var(--sh-text-faint); font-weight: var(--sh-weight-regular); }
+
+/* Il campo della paga oraria affiancato al simbolo di valuta */
+.sh-rate {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-rate__currency {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  color: var(--sh-text-muted);
+}
+
+/* Nome modificabile di un tipo di settimana personalizzato */
+.sh-typename {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sh-space-2) var(--sh-space-3);
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-bg);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-medium);
+}
+
+/* Una paga dello storico: quanto, e da quando. La riga intera si tocca per
+   correggerla; la ✕ accanto la cancella. */
+.sh-raterow {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-2);
+}
+
+.sh-raterow__edit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sh-touch-min);
+  padding: var(--sh-space-3) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  text-align: left;
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-raterow__edit:active { background: var(--sh-surface-strong); }
+
+.sh-raterow__amount {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sh-raterow__from {
+  font-size: var(--sh-size-xs);
+  color: var(--sh-text-muted);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Elenco vuoto: lo storico prima che ci sia dentro qualcosa */
+.sh-empty {
+  margin: 0;
+  padding: var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-sm);
+  text-align: center;
+}
+
+.sh-daypicker { display: flex; gap: var(--sh-space-2); }
+
+.sh-daypicker__day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: var(--sh-touch-min);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-bg);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+}
+
+.sh-daypicker__day[aria-pressed="true"] {
+  background: var(--sh-primary);
+  color: var(--sh-on-primary);
+}
+
+/* ── 11. Banner di notifica ───────────────────────────────────────── */
+
+.sh-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sh-space-3);
+  padding: var(--sh-space-4) var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-text);
+  color: var(--sh-bg);
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-medium);
+  box-shadow: var(--sh-shadow-md);
+}
+
+.sh-toast__icon { color: var(--sh-hero-to); flex: none; }
+
+/* ── 12. Livelli, foglio di scelta, notifiche a comparsa ──────────── */
+
+/* Impostazioni e storico: coprono la schermata, si chiudono con la ✕ */
+.sh-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--sh-bg);
+  animation: sh-layer-in var(--sh-motion-normal) var(--sh-motion-ease);
+}
+
+.sh-layer[hidden] { display: none; }
+.sh-layer > .sh-panel { height: 100%; min-height: 0; }
+
+@keyframes sh-layer-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Scelta del tipo di settimana */
+.sh-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: hsl(var(--sh-shadow-color) / 0.4);
+  animation: sh-fade-in var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-scrim[hidden] { display: none; }
+
+@keyframes sh-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.sh-sheet {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 21;
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  margin-inline: auto;
+  padding: var(--sh-space-3) var(--sh-gutter) var(--sh-space-5);
+  padding-bottom: max(var(--sh-space-5), env(safe-area-inset-bottom));
+  border-start-start-radius: var(--sh-radius-lg);
+  border-start-end-radius: var(--sh-radius-lg);
+  background: var(--sh-bg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+  animation: sh-sheet-in var(--sh-motion-normal) var(--sh-motion-ease);
+}
+
+.sh-sheet[hidden] { display: none; }
+
+@keyframes sh-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+.sh-sheet__grip {
+  width: 40px;
+  height: 5px;
+  margin: 0 auto var(--sh-space-3);
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface-strong);
+}
+
+.sh-sheet__title {
+  margin: 0 0 var(--sh-space-2);
+  padding-inline: var(--sh-space-2);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.sh-sheet__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sh-space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--sh-space-5);
+  border-radius: var(--sh-radius-md);
+  background: var(--sh-surface);
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-medium);
+  text-align: left;
+}
+
+.sh-sheet__option[aria-selected="true"] {
+  background: var(--sh-primary-soft);
+  color: var(--sh-primary-ink);
+  font-weight: var(--sh-weight-semibold);
+}
+
+.sh-sheet__days { font-size: var(--sh-size-xs); color: var(--sh-text-muted); }
+
+.sh-sheet__option[aria-selected="true"] .sh-sheet__days { color: var(--sh-primary-ink); }
+
+/* Notifiche: stanno sopra la barra d'azione, spariscono da sole */
+.sh-toasts {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-2);
+  width: 100%;
+  max-width: var(--sh-app-max-width);
+  margin-inline: auto;
+  padding: var(--sh-gutter);
+  padding-bottom: calc(var(--sh-space-8) + var(--sh-space-8));
+  pointer-events: none;
+}
+
+.sh-toasts .sh-toast { animation: sh-toast-in var(--sh-motion-normal) var(--sh-motion-ease); }
+
+@keyframes sh-toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.sh-toast--leaving {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--sh-motion-normal) var(--sh-motion-ease),
+              transform var(--sh-motion-normal) var(--sh-motion-ease);
+}
+
+/* ── 13. Utilità ──────────────────────────────────────────────────── */
+
+.sh-hidden { display: none !important; }
+
+.sh-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── 14. Calendario ───────────────────────────────────────────────── */
+
+/* La pillola del prossimo bank holiday, in mezzo alla testata del calendario.
+ *
+ * Veste i colori di quello che dice: il fondo e il grigio della scritta sono
+ * quelli dei pulsanti tondi della testata (4.9:1, passa), l'anello e l'alone
+ * sono il giallo delle feste. Nessun colore nuovo.
+ *
+ * Il giro è un gradiente conico dentro un quadrato che ruota, ritagliato al
+ * solo bordo dall'`overflow: hidden` della pillola. Il quadrato è largo il
+ * 190% della pillola, così girando copre sempre tutti e quattro gli angoli.
+ * Niente immagini, niente librerie, e gira sulla scheda video: durante
+ * l'animazione non si ridisegna niente del calendario sotto.
+ */
+.sh-hpill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;                     /* più bassa dei 44px dei pulsanti: è
+                                       un'informazione, non un attrezzo */
+  padding: 0 13px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+  color: var(--sh-text-muted);
+  font-size: var(--sh-size-xs);
+  font-weight: var(--sh-weight-semibold);
+  white-space: nowrap;
+  flex: none;
+  box-shadow: 0 0 14px rgba(255, 214, 10, 0.42);
+  transition: background var(--sh-motion-fast) var(--sh-motion-ease);
+}
+
+.sh-hpill:active { background: var(--sh-surface-strong); }
+
+.sh-hpill__text { position: relative; z-index: 2; }
+
+.sh-hpill__ring {
+  position: absolute;
+  inset: -2px;                      /* lo spessore dell'anello */
+  border-radius: var(--sh-radius-pill);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sh-hpill__ring::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 190%;
+  aspect-ratio: 1;
+  background: conic-gradient(transparent 0deg 245deg, var(--sh-holiday) 350deg, transparent 360deg);
+  animation: sh-hpill-spin 2.6s linear infinite;
+}
+
+/* Il buco in mezzo: ricopre il gradiente e lascia scoperto solo il bordo. */
+.sh-hpill__ring::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: var(--sh-radius-pill);
+  background: var(--sh-surface);
+}
+
+@keyframes sh-hpill-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Chi ha chiesto meno movimento non lo vede girare: resta l'anello giallo
+   pieno, che dice la stessa cosa senza muoversi. */
+@media (prefers-reduced-motion: reduce) {
+  .sh-hpill__ring::before {
+    animation: none;
+    background: var(--sh-holiday);
+  }
+}
+
+/* Un mese sotto l'altro, si scorre in verticale. È in sola lettura: qui non
+   si modifica niente, si guarda com'è andato il mese. */
+.sh-cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-7);
+}
+
+.sh-cal__month {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sh-space-3);
+}
+
+.sh-cal__title {
+  font-size: var(--sh-size-md);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-tight);
+}
+
+.sh-cal__weekdays,
+.sh-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sh-space-1);
+}
+
+.sh-cal__weekdays {
+  font-size: var(--sh-size-2xs);
+  font-weight: var(--sh-weight-semibold);
+  letter-spacing: var(--sh-tracking-wide);
+  color: var(--sh-text-muted);
+  text-align: center;
+}
+
+/* La casella è quadrata: sette colonne dentro 393px fanno circa 47px, e in
+   47px ci stanno il numero e sotto l'importo piccolo. */
+.sh-cal__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 3px e non 1: l'anello giallo dei bank holiday sborda di 3px dal numero, e
+     con uno spazio più stretto andrebbe a toccare l'importo sotto. */
+  gap: 3px;
+  aspect-ratio: 1;
+  border-radius: var(--sh-radius-sm);
+  background: var(--sh-bg);
+  color: var(--sh-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Il giorno senza data: le celle vuote prima del primo e dopo l'ultimo. */
+.sh-cal__day--empty { background: none; }
+
+.sh-cal__num {
+  font-size: var(--sh-size-sm);
+  font-weight: var(--sh-weight-semibold);
+  line-height: 1;
+}
+
+/* L'importo arrotondato all'euro: i centesimi restano solo in Estimated pay,
+   qui non ci starebbero e non servirebbero.
+ *
+ * `height` fissa, e lo span c'è sempre anche quando è vuoto: se no una casella
+ * senza importo centrerebbe il solo numero, e nella stessa riga i numeri dei
+ * giorni lavorati starebbero più in alto degli altri. */
+.sh-cal__pay {
+  height: 1em;
+  font-size: var(--sh-size-2xs);
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* I sei gradini. Ognuno porta con sé il suo inchiostro: il contrasto è
+   deciso qui, non calcolato quando la pagina è già a schermo. */
+.sh-cal__day[data-heat="0"] { background: var(--sh-heat-0); color: var(--sh-heat-ink-0); }
+.sh-cal__day[data-heat="1"] { background: var(--sh-heat-1); color: var(--sh-heat-ink-1); }
+.sh-cal__day[data-heat="2"] { background: var(--sh-heat-2); color: var(--sh-heat-ink-2); }
+.sh-cal__day[data-heat="3"] { background: var(--sh-heat-3); color: var(--sh-heat-ink-3); }
+.sh-cal__day[data-heat="4"] { background: var(--sh-heat-4); color: var(--sh-heat-ink-4); }
+.sh-cal__day[data-heat="5"] { background: var(--sh-heat-5); color: var(--sh-heat-ink-5); }
+
+/* Bank holiday: l'anello attorno al numero, dello stesso giallo del pallino
+   della schermata settimana. */
+.sh-cal__day--holiday .sh-cal__num {
+  box-shadow: 0 0 0 2px var(--sh-holiday);
+  border-radius: var(--sh-radius-pill);
+  padding: 3px 4px;
+  margin: -3px -4px;
+}
+
+/* Oggi: lo stesso segno che porta nella lista dei giorni, un contorno blu. */
+.sh-cal__day--today { box-shadow: inset 0 0 0 2px var(--sh-primary); }

@@ -1,0 +1,17 @@
+/* Shift Hours — regole di layout specifiche dell'app.
+ * Qui sta solo ciò che riguarda questa applicazione, non il sistema visivo:
+ * i componenti riutilizzabili vivono in components.css.
+ *
+ * Fase 3: .sh-rate, .sh-typename e .sh-empty stavano qui e sono stati spostati
+ * in components.css, dove dice questo commento. Erano componenti a tutti gli
+ * effetti, e finché stavano in questo file non comparivano in reference.html —
+ * che carica components.css e non app.css — quindi non erano approvabili né
+ * visibili a chi lavora alla grafica.
+ */
+
+/* L'app occupa esattamente la finestra: niente scorrimento della pagina,
+   scorre solo la lista dei giorni. */
+html, body { height: 100%; overflow: hidden; }
+
+/* Vale su tutto: i componenti a comparsa usano flex e sovrascriverebbero hidden. */
+[hidden] { display: none !important; }
